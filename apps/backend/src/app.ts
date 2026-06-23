@@ -1,11 +1,19 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
-import authSessionPlugin from "./plugins/auth-session";
 import authRoutes from "./modules/auth/auth.routes";
+import chatRoutes from "./modules/chat/chat.routes";
 import conversationRoutes from "./modules/conversations/conversation.routes";
+import { createOpenAIProvider } from "./modules/providers/openai.provider";
+import type { ChatProvider } from "./modules/providers/provider.types";
+import authSessionPlugin from "./plugins/auth-session";
 
-export function buildApp() {
+type BuildAppOptions = {
+  provider?: ChatProvider;
+};
+
+export function buildApp(options: BuildAppOptions = {}) {
   const app = Fastify();
+  const provider = options.provider ?? createOpenAIProvider();
 
   app.register(cors, {
     origin:
@@ -14,6 +22,7 @@ export function buildApp() {
   });
   app.register(authSessionPlugin);
   app.register(authRoutes, { prefix: "/auth" });
+  app.register(chatRoutes, { prefix: "/chat", provider });
   app.register(conversationRoutes, { prefix: "/conversations" });
 
   return app;
