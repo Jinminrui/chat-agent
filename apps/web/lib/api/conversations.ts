@@ -2,10 +2,11 @@ import type { Conversation, Message } from "@chat-agent/shared";
 import { apiRequest } from "./client";
 
 export async function createConversation(): Promise<Conversation> {
-  return apiRequest<Conversation>("/conversations", {
+  const response = await apiRequest<{ conversation: Conversation }>("/conversations", {
     method: "POST",
     body: JSON.stringify({}),
   });
+  return response.conversation;
 }
 
 export async function listConversations(): Promise<{ items: Conversation[] }> {

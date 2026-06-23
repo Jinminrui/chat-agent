@@ -2,10 +2,11 @@ import type { User } from "@chat-agent/shared";
 import { apiRequest } from "./client";
 
 export async function login(emailOrUsername: string, password: string): Promise<User> {
-  return apiRequest<User>("/auth/login", {
+  const response = await apiRequest<{ user: User }>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ emailOrUsername, password }),
   });
+  return response.user;
 }
 
 export async function register(params: {
@@ -13,10 +14,11 @@ export async function register(params: {
   email: string;
   password: string;
 }): Promise<User> {
-  return apiRequest<User>("/auth/register", {
+  const response = await apiRequest<{ user: User }>("/auth/register", {
     method: "POST",
     body: JSON.stringify(params),
   });
+  return response.user;
 }
 
 export async function logout(): Promise<void> {
@@ -27,5 +29,6 @@ export async function logout(): Promise<void> {
 }
 
 export async function getMe(): Promise<User> {
-  return apiRequest<User>("/auth/me");
+  const response = await apiRequest<{ user: User }>("/auth/me");
+  return response.user;
 }
