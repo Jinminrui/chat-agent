@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { buildApp } from '../src/app';
 
+describe('prisma logging', () => {
+  it('should export setupPrismaLogging function', async () => {
+    const { setupPrismaLogging } = await import('../src/lib/prisma');
+    expect(typeof setupPrismaLogging).toBe('function');
+  });
+});
+
 describe('error logging', () => {
   it('should log errors with stack trace', async () => {
     const app = buildApp();
