@@ -335,23 +335,58 @@ ChatPage
 
 ## 9. 实现步骤
 
-### 9.1 安装 shadcn/ui
+### 9.1 使用 shadcn CLI 初始化
+
+使用 shadcn 官方 CLI 工具初始化项目和安装组件：
 
 ```bash
-# 初始化 shadcn/ui
-pnpm dlx shadcn@latest init
+# 初始化 shadcn/ui（在 apps/web 目录下执行）
+cd apps/web
+npx shadcn@latest init
 
-# 安装需要的组件
-pnpm dlx shadcn@latest add button card input label textarea badge avatar scroll-area separator dropdown-menu sheet sidebar form
+# 按照提示选择配置：
+# - 风格: New York
+# - 基色: Neutral
+# - CSS 文件路径: app/globals.css
+# - Tailwind 配置路径: tailwind.config.ts
+# - 组件别名: @/components
+# - 工具函数别名: @/lib/utils
 ```
 
-### 9.2 配置主题
+### 9.2 安装所需组件
 
-1. 更新 `globals.css`，添加完整的主题变量
-2. 更新 `tailwind.config.ts`，配置 shadcn/ui
-3. 删除旧的 `tokens.css`
+使用 shadcn CLI 添加组件：
 
-### 9.3 重构组件
+```bash
+# 在 apps/web 目录下执行
+cd apps/web
+
+# 基础组件
+npx shadcn@latest add button card input label textarea
+
+# 布局组件
+npx shadcn@latest add scroll-area separator avatar
+
+# 导航组件
+npx shadcn@latest add sidebar dropdown-menu sheet
+
+# 表单组件
+npx shadcn@latest add form
+
+# 反馈组件
+npx shadcn@latest add badge
+
+# 安装 Lucide React 图标库
+pnpm add lucide-react
+```
+
+### 9.3 配置主题
+
+1. 更新 `globals.css`，添加完整的主题变量（替换 shadcn 默认主题）
+2. 删除旧的 `tokens.css`
+3. 更新 `tailwind.config.ts`，确保 shadcn/ui 配置正确
+
+### 9.4 重构组件
 
 按以下顺序重构：
 1. 登录页（AuthCard、LoginForm）
@@ -361,7 +396,7 @@ pnpm dlx shadcn@latest add button card input label textarea badge avatar scroll-
 5. 输入区域（Composer）
 6. 空状态（EmptyState）
 
-### 9.4 测试验证
+### 9.5 测试验证
 
 - 视觉验证：对比 spec 设计，确保还原度
 - 响应式测试：验证不同屏幕尺寸下的表现
