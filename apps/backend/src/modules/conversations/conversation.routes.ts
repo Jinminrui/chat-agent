@@ -1,22 +1,15 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
-import { unauthorizedSchema } from "../auth/auth.schema";
+import { successResponseSchema, errorResponseSchema } from "../auth/auth.schema";
 import {
   createConversation,
   listConversations,
   listMessages,
 } from "./conversation.service";
+import { ErrorCodes } from "../../lib/error-codes";
 
 type ConversationMessageParams = {
   id: string;
 };
-
-const notFoundSchema = {
-  type: "object",
-  required: ["message"],
-  properties: {
-    message: { type: "string" },
-  },
-} as const;
 
 const conversationSchema = {
   type: "object",
@@ -52,14 +45,8 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
           additionalProperties: false,
         },
         response: {
-          201: {
-            type: "object",
-            required: ["conversation"],
-            properties: {
-              conversation: conversationSchema,
-            },
-          },
-          401: unauthorizedSchema,
+          201: successResponseSchema,
+          401: errorResponseSchema,
         },
       },
     },
@@ -67,11 +54,11 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       const userId = request.session.userId;
 
       if (!userId) {
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
       }
 
       const conversation = await createConversation(userId);
-      return reply.code(201).send({ conversation });
+      return reply.code(201).success({ conversation });
     },
   );
 
@@ -80,17 +67,8 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         response: {
-          200: {
-            type: "object",
-            required: ["items"],
-            properties: {
-              items: {
-                type: "array",
-                items: conversationSchema,
-              },
-            },
-          },
-          401: unauthorizedSchema,
+          200: successResponseSchema,
+          401: errorResponseSchema,
         },
       },
     },
@@ -98,11 +76,11 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       const userId = request.session.userId;
 
       if (!userId) {
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
       }
 
       const items = await listConversations(userId);
-      return { items };
+      return reply.success({ items });
     },
   );
 
@@ -118,18 +96,9 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
           },
         },
         response: {
-          200: {
-            type: "object",
-            required: ["items"],
-            properties: {
-              items: {
-                type: "array",
-                items: messageSchema,
-              },
-            },
-          },
-          401: unauthorizedSchema,
-          404: notFoundSchema,
+          200: successResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
         },
       },
     },
@@ -140,16 +109,16 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       const userId = request.session.userId;
 
       if (!userId) {
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
       }
 
       const items = await listMessages(userId, request.params.id);
 
       if (!items) {
-        return reply.code(404).send({ message: "Conversation not found" });
+        return reply.code(404).error(ErrorCodes.CONVERSATION_NOT_FOUND, "会话不存在");
       }
 
-      return { items };
+      return reply.success({ items });
     },
   );
 };

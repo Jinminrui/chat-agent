@@ -125,7 +125,7 @@ describe("chat persistence", () => {
         payload: {},
       });
 
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
 
       const streamed = await app.inject({
         method: "POST",
@@ -143,11 +143,12 @@ describe("chat persistence", () => {
       });
 
       expect(messagesResponse.statusCode).toBe(200);
-      expect(messagesResponse.json().items).toHaveLength(2);
-      expect(messagesResponse.json().items[0].role).toBe("user");
-      expect(messagesResponse.json().items[0].content).toBe("你好");
-      expect(messagesResponse.json().items[1].role).toBe("assistant");
-      expect(messagesResponse.json().items[1].content).toBe("你好，我已经完成处理。");
+      expect(messagesResponse.json().code).toBe(0);
+      expect(messagesResponse.json().data.items).toHaveLength(2);
+      expect(messagesResponse.json().data.items[0].role).toBe("user");
+      expect(messagesResponse.json().data.items[0].content).toBe("你好");
+      expect(messagesResponse.json().data.items[1].role).toBe("assistant");
+      expect(messagesResponse.json().data.items[1].content).toBe("你好，我已经完成处理。");
     } finally {
       await app.close();
     }
@@ -186,7 +187,7 @@ describe("chat persistence", () => {
         payload: {},
       });
 
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
 
       const streamed = await app.inject({
         method: "POST",

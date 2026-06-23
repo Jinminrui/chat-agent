@@ -230,7 +230,8 @@ describe("conversation routes", () => {
       });
 
       expect(list.statusCode).toBe(200);
-      expect(list.json().items).toHaveLength(1);
+      expect(list.json().code).toBe(0);
+      expect(list.json().data.items).toHaveLength(1);
     } finally {
       await app.close();
     }
@@ -254,7 +255,7 @@ describe("conversation routes", () => {
         payload: {},
       });
 
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
       const list = await app.inject({
         method: "GET",
         url: `/conversations/${conversationId}/messages`,
@@ -262,7 +263,8 @@ describe("conversation routes", () => {
       });
 
       expect(list.statusCode).toBe(200);
-      expect(list.json().items).toEqual([]);
+      expect(list.json().code).toBe(0);
+      expect(list.json().data.items).toEqual([]);
     } finally {
       await app.close();
     }
@@ -326,7 +328,7 @@ describe("conversation routes", () => {
 
       const response = await app.inject({
         method: "GET",
-        url: `/conversations/${created.json().conversation.id}/messages`,
+        url: `/conversations/${created.json().data.conversation.id}/messages`,
         cookies: { session: intruderSession },
       });
 

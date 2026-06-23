@@ -286,7 +286,7 @@ describe("chat stream route", () => {
         cookies: { session },
         payload: {},
       });
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
 
       // Chat stream
       const response = await app.inject({
@@ -371,7 +371,7 @@ describe("chat stream route", () => {
         cookies: { session: ownerSession },
         payload: {},
       });
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
 
       // Other user tries to chat in owner's conversation
       const response = await app.inject({
@@ -411,7 +411,7 @@ describe("chat stream route", () => {
         cookies: { session },
         payload: {},
       });
-      const conversationId = created.json().conversation.id;
+      const conversationId = created.json().data.conversation.id;
 
       await app.inject({
         method: "POST",
