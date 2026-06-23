@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="PostgreSQL" uuid="722a87d1-fb0f-4a97-b2b1-bc9a68cbec39">
+    <data-source source="LOCAL" name="chat_agent@localhost" uuid="f4be77bd-5354-4a43-bfb0-541f984a6175">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
-      <configured-by-url>true</configured-by-url>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>postgresql://postgres:980328@localhost:5432/chat_agent</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/chat_agent</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
