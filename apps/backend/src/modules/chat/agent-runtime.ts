@@ -4,6 +4,7 @@ import {
   type ToolMap,
   type ToolOutput,
 } from "../tools/tool-registry";
+import type { CheckpointService } from "./checkpoint.service";
 
 type RuntimeMessage = {
   role: "user" | "assistant" | "tool";
@@ -38,10 +39,12 @@ type CreateAgentRuntimeInput = {
   provider: RuntimeProvider;
   tools: ToolMap;
   maxToolCalls: number;
+  checkpointService?: CheckpointService;
 };
 
 type RunInput = {
   messages: RuntimeMessage[];
+  conversationId?: string;
 };
 
 type RunResult = {
@@ -69,6 +72,20 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
     async run(input: RunInput): Promise<RunResult> {
       const messages = [...input.messages];
       const toolCalls: RuntimeToolCall[] = [];
+      const { conversationId, checkpointService } = {
+        conversationId: input.conversationId,
+        checkpointService: config.checkpointService,
+      };
+
+      // Resume from checkpoint if available
+      if (conversationId && checkpointService) {
+        const checkpoint = await checkpointService.load(conversationId);
+        if (checkpoint) {
+          const state = checkpoint.state as { messages: RuntimeMessage[] };
+          messages.splice(0, messages.length, ...state.messages);
+          // toolCalls will be rebuilt from the provider loop
+        }
+      }
 
       while (true) {
         const response = await config.provider.stream({ messages });
@@ -102,6 +119,15 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
           toolName: response.toolName,
           content: serializeToolOutput(output),
         });
+
+        // Save checkpoint after each tool call
+        if (conversationId && checkpointService) {
+          await checkpointService.save(
+            conversationId,
+            toolCalls.length,
+            messages,
+          );
+        }
       }
     },
   };
