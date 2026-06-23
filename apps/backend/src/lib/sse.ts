@@ -1,4 +1,4 @@
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export class SSEWriter {
   private id = 0;
@@ -8,10 +8,14 @@ export class SSEWriter {
     private reply: FastifyReply,
     private heartbeatInterval = 30000
   ) {
+    const origin = reply.request.headers.origin || '*';
+
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Credentials': 'true',
     });
 
     this.startHeartbeat();
