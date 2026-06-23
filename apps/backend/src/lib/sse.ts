@@ -8,11 +8,11 @@ export class SSEWriter {
     private reply: FastifyReply,
     private heartbeatInterval = 30000
   ) {
-    reply.raw.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    });
+    // 使用 Fastify 的 reply 对象设置响应头，这样 CORS 头会被自动添加
+    reply.header('Content-Type', 'text/event-stream');
+    reply.header('Cache-Control', 'no-cache');
+    reply.header('Connection', 'keep-alive');
+    reply.raw.writeHead(200);
 
     this.startHeartbeat();
   }
