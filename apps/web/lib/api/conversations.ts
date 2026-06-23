@@ -1,18 +1,17 @@
-import type { Conversation, Message } from "@chat-agent/shared";
-import { apiRequest } from "./client";
+import { api } from './client';
+import type { Conversation, ChatMessage, CreateConversationResponse, ListConversationsResponse, ListMessagesResponse } from '@/types/chat';
 
 export async function createConversation(): Promise<Conversation> {
-  const response = await apiRequest<{ conversation: Conversation }>("/conversations", {
-    method: "POST",
-    body: JSON.stringify({}),
-  });
-  return response.conversation;
+  const response = await api.post<CreateConversationResponse>('/conversations');
+  return response.data.conversation;
 }
 
-export async function listConversations(): Promise<{ items: Conversation[] }> {
-  return apiRequest<{ items: Conversation[] }>("/conversations");
+export async function listConversations(): Promise<Conversation[]> {
+  const response = await api.get<ListConversationsResponse>('/conversations');
+  return response.data.items;
 }
 
-export async function listMessages(conversationId: string): Promise<{ items: Message[] }> {
-  return apiRequest<{ items: Message[] }>(`/conversations/${conversationId}/messages`);
+export async function listMessages(conversationId: string): Promise<ChatMessage[]> {
+  const response = await api.get<ListMessagesResponse>(`/conversations/${conversationId}/messages`);
+  return response.data.items;
 }
