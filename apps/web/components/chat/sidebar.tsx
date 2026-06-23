@@ -32,7 +32,7 @@ export function AppSidebar() {
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_API_BASE_URL) return;
-    listConversations().then((data) => setConversations(data.items));
+    listConversations().then((items) => setConversations(items));
   }, []);
 
   const handleCreate = useCallback(async () => {

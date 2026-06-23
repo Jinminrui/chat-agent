@@ -40,7 +40,7 @@ export default function ConversationPage() {
   const { streaming, delta, send } = useChatStream({ onComplete: handleStreamComplete });
 
   useEffect(() => {
-    listMessages(conversationId).then((data) => setMessages(data.items));
+    listMessages(conversationId).then((items) => setMessages(items));
   }, [conversationId]);
 
   const handleSend = useCallback(
