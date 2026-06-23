@@ -50,9 +50,9 @@ export function buildApp(options: BuildAppOptions = {}) {
   });
   app.register(authSessionPlugin);
   app.register(responseFormatPlugin);
-  app.register(authRoutes, { prefix: "/auth" });
-  app.register(chatRoutes, { prefix: "/chat", provider, prisma, tools });
-  app.register(conversationRoutes, { prefix: "/conversations" });
+  app.register(authRoutes, { prefix: "/api/auth" });
+  app.register(chatRoutes, { prefix: "/api/chat", provider, prisma, tools });
+  app.register(conversationRoutes, { prefix: "/api/conversations" });
 
   // 全局错误处理器
   app.setErrorHandler((error, request, reply) => {

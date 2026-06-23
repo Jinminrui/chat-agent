@@ -28,7 +28,7 @@ describe('business logging', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/auth/login',
+      url: '/api/auth/login',
       payload: {
         emailOrUsername: 'test@example.com',
         password: 'password1234',
@@ -81,7 +81,7 @@ describe('logging', () => {
 
     const response = await app.inject({
       method: 'GET',
-      url: '/auth/me',
+      url: '/api/auth/me',
     });
 
     expect(response.statusCode).toBe(401);
@@ -107,7 +107,7 @@ describe('logging', () => {
     const customRequestId = 'req_custom-123';
     const response = await app.inject({
       method: 'GET',
-      url: '/auth/me',
+      url: '/api/auth/me',
       headers: {
         'x-request-id': customRequestId,
       },

@@ -292,7 +292,7 @@ describe("chat stream route", () => {
       // Register user and get session
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "chat", email: "chat@example.com", password: "password123" },
       });
       const session = register.cookies[0]?.value ?? "";
@@ -300,7 +300,7 @@ describe("chat stream route", () => {
       // Create conversation
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -309,7 +309,7 @@ describe("chat stream route", () => {
       // Chat stream
       const response = await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         cookies: { session },
         payload: {
           conversationId,
@@ -348,7 +348,7 @@ describe("chat stream route", () => {
     try {
       const response = await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         payload: {
           conversationId: "conv_1",
           message: "你好",
@@ -372,14 +372,14 @@ describe("chat stream route", () => {
       // Register two users
       const ownerReg = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "owner", email: "owner@example.com", password: "password123" },
       });
       const ownerSession = ownerReg.cookies[0]?.value ?? "";
 
       const otherReg = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "other", email: "other@example.com", password: "password123" },
       });
       const otherSession = otherReg.cookies[0]?.value ?? "";
@@ -387,7 +387,7 @@ describe("chat stream route", () => {
       // Owner creates conversation
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session: ownerSession },
         payload: {},
       });
@@ -396,7 +396,7 @@ describe("chat stream route", () => {
       // Other user tries to chat in owner's conversation
       const response = await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         cookies: { session: otherSession },
         payload: {
           conversationId,
@@ -420,14 +420,14 @@ describe("chat stream route", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "persist", email: "persist@example.com", password: "password123" },
       });
       const session = register.cookies[0]?.value ?? "";
 
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -435,7 +435,7 @@ describe("chat stream route", () => {
 
       await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         cookies: { session },
         payload: {
           conversationId,

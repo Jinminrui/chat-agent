@@ -208,7 +208,7 @@ describe("conversation routes", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "owner", email: "owner@example.com", password: "password123" },
       });
 
@@ -216,7 +216,7 @@ describe("conversation routes", () => {
 
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -225,7 +225,7 @@ describe("conversation routes", () => {
 
       const list = await app.inject({
         method: "GET",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
       });
 
@@ -243,14 +243,14 @@ describe("conversation routes", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "reader", email: "reader@example.com", password: "password123" },
       });
 
       const session = register.cookies[0]?.value ?? "";
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -258,7 +258,7 @@ describe("conversation routes", () => {
       const conversationId = created.json().data.conversation.id;
       const list = await app.inject({
         method: "GET",
-        url: `/conversations/${conversationId}/messages`,
+        url: `/api/conversations/${conversationId}/messages`,
         cookies: { session },
       });
 
@@ -276,7 +276,7 @@ describe("conversation routes", () => {
     try {
       const response = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         payload: {},
       });
 
@@ -292,7 +292,7 @@ describe("conversation routes", () => {
     try {
       const response = await app.inject({
         method: "GET",
-        url: "/conversations/conversation-1/messages",
+        url: "/api/conversations/conversation-1/messages",
       });
 
       expect(response.statusCode).toBe(401);
@@ -307,28 +307,28 @@ describe("conversation routes", () => {
     try {
       const ownerRegister = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "owner-a", email: "owner-a@example.com", password: "password123" },
       });
       const ownerSession = ownerRegister.cookies[0]?.value ?? "";
 
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session: ownerSession },
         payload: {},
       });
 
       const intruderRegister = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "owner-b", email: "owner-b@example.com", password: "password123" },
       });
       const intruderSession = intruderRegister.cookies[0]?.value ?? "";
 
       const response = await app.inject({
         method: "GET",
-        url: `/conversations/${created.json().data.conversation.id}/messages`,
+        url: `/api/conversations/${created.json().data.conversation.id}/messages`,
         cookies: { session: intruderSession },
       });
 

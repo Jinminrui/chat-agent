@@ -112,7 +112,7 @@ describe("chat persistence", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "flow", email: "flow@example.com", password: "password123" },
       });
 
@@ -120,7 +120,7 @@ describe("chat persistence", () => {
 
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -129,7 +129,7 @@ describe("chat persistence", () => {
 
       const streamed = await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         cookies: { session },
         payload: { conversationId, message: "你好" },
       });
@@ -138,7 +138,7 @@ describe("chat persistence", () => {
 
       const messagesResponse = await app.inject({
         method: "GET",
-        url: `/conversations/${conversationId}/messages`,
+        url: `/api/conversations/${conversationId}/messages`,
         cookies: { session },
       });
 
@@ -174,7 +174,7 @@ describe("chat persistence", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: { username: "tool", email: "tool@example.com", password: "password123" },
       });
 
@@ -182,7 +182,7 @@ describe("chat persistence", () => {
 
       const created = await app.inject({
         method: "POST",
-        url: "/conversations",
+        url: "/api/conversations",
         cookies: { session },
         payload: {},
       });
@@ -191,7 +191,7 @@ describe("chat persistence", () => {
 
       const streamed = await app.inject({
         method: "POST",
-        url: "/chat/stream",
+        url: "/api/chat/stream",
         cookies: { session },
         payload: { conversationId, message: "现在几点？" },
       });

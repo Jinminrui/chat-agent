@@ -113,7 +113,7 @@ describe("auth routes", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: {
           username: "demo",
           email: "demo@example.com",
@@ -130,7 +130,7 @@ describe("auth routes", () => {
       const cookies = register.cookies;
       const me = await app.inject({
         method: "GET",
-        url: "/auth/me",
+        url: "/api/auth/me",
         cookies: {
           session: cookies[0]?.value ?? "",
         },
@@ -152,7 +152,7 @@ describe("auth routes", () => {
     try {
       const first = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: {
           username: "user1",
           email: "duplicate@example.com",
@@ -164,7 +164,7 @@ describe("auth routes", () => {
 
       const second = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         payload: {
           username: "user2",
           email: "duplicate@example.com",
@@ -189,7 +189,7 @@ describe("auth routes", () => {
     try {
       const register = await app.inject({
         method: "POST",
-        url: "/auth/register",
+        url: "/api/auth/register",
         headers: {
           origin: "http://localhost:4000",
         },

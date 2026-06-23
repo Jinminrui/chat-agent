@@ -7,7 +7,7 @@ export async function streamChat(
     onComplete?: () => void;
   },
 ) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/stream`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/chat/stream`, {
     method: "POST",
     credentials: "include",
     headers: {
