@@ -32,6 +32,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
         const user = await registerUser(request.body as RegisterBody);
 
         request.session.userId = user.id;
+        request.log.info({ userId: user.id }, 'user registered');
 
         return reply.code(201).send({ user });
       } catch (error: unknown) {
@@ -41,6 +42,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
           "name" in error &&
           (error as { name: string }).name === "EMAIL_ALREADY_EXISTS"
         ) {
+          request.log.warn({ email: (request.body as RegisterBody).email }, 'registration failed: email already exists');
           return reply.code(409).send({ message: "Email already exists" });
         }
         throw error;
@@ -63,18 +65,22 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       const user = await loginUser(request.body as LoginBody);
 
       if (!user) {
+        request.log.warn({ emailOrUsername: (request.body as LoginBody).emailOrUsername }, 'login failed: invalid credentials');
         return reply.code(401).send({ message: "Unauthorized" });
       }
 
       request.session.userId = user.id;
+      request.log.info({ userId: user.id }, 'user logged in');
 
       return { user };
     },
   );
 
   app.post("/logout", async (request, reply) => {
+    const userId = request.session.userId;
     request.session.userId = undefined;
     await request.session.destroy();
+    request.log.info({ userId }, 'user logged out');
     return reply.code(204).send();
   });
 

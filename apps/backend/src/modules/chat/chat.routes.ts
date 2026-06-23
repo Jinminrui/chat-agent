@@ -99,6 +99,12 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         conversationId,
       });
 
+      request.log.info({
+        conversationId,
+        toolCallCount: result.toolCalls.length,
+        contentLength: result.content.length,
+      }, 'agent run completed');
+
       // Persist assistant message
       const assistantMessage = await prisma.message.create({
         data: {

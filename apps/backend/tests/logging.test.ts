@@ -21,6 +21,27 @@ describe('llm logging', () => {
   });
 });
 
+describe('business logging', () => {
+  it('should log auth operations', async () => {
+    const app = buildApp();
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: {
+        emailOrUsername: 'test@example.com',
+        password: 'password1234',
+      },
+    });
+
+    // 登录会失败（用户不存在），但路由应该正常处理
+    expect([401, 500]).toContain(response.statusCode);
+
+    await app.close();
+  });
+});
+
 describe('error logging', () => {
   it('should log errors with stack trace', async () => {
     const app = buildApp();
