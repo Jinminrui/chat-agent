@@ -12,7 +12,7 @@ async function main() {
 
   try {
     await app.listen({ port: PORT, host: HOST });
-    app.log.log(`Backend listening on http://${HOST}:${PORT}`);
+    app.log.info(`Backend listening on http://${HOST}:${PORT}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);

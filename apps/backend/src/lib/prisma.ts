@@ -26,7 +26,7 @@ const SLOW_QUERY_MS = process.env.NODE_ENV === 'production' ? 100 : 0;
 export function setupPrismaLogging(logger: FastifyBaseLogger) {
   prisma.$on('query', (e) => {
     if (e.duration >= SLOW_QUERY_MS) {
-      logger.log({
+      logger.info({
         type: 'db.query',
         query: e.query,
         duration: e.duration,

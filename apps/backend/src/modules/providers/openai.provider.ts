@@ -30,7 +30,7 @@ export function createOpenAIProvider(
 
       // 记录 LLM 调用日志
       if (logger) {
-        logger.log({
+        logger.info({
           type: 'llm.request',
           messageCount: input.messages.length,
           duration: Date.now() - start,
