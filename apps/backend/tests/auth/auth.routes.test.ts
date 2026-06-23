@@ -9,6 +9,7 @@ type MockUserRecord = {
 };
 
 const users = new Map<string, MockUserRecord>();
+const registeredEmails = new Set<string>();
 let nextUserId = 1;
 
 vi.mock("../../src/lib/prisma", () => ({
@@ -22,6 +23,14 @@ vi.mock("../../src/lib/prisma", () => ({
           data: { email: string; passwordHash: string };
           select?: Record<string, boolean>;
         }) => {
+        if (registeredEmails.has(data.email)) {
+          const err = new Error("Unique constraint failed") as Error & {
+            code: string;
+          };
+          err.code = "P2002";
+          throw err;
+        }
+
         const user = {
           id: `user-${nextUserId++}`,
           email: data.email,
@@ -30,6 +39,7 @@ vi.mock("../../src/lib/prisma", () => ({
         };
 
         users.set(user.id, user);
+        registeredEmails.add(user.email);
 
         return {
           ...(select?.id ? { id: user.id } : {}),
@@ -93,6 +103,7 @@ vi.mock("../../src/lib/prisma", () => ({
 describe("auth routes", () => {
   beforeEach(() => {
     users.clear();
+    registeredEmails.clear();
     nextUserId = 1;
   });
 
@@ -125,6 +136,37 @@ describe("auth routes", () => {
       expect(me.statusCode).toBe(200);
       expect(me.json().user.email).toBe("demo@example.com");
       expect(me.json().user.createdAt).toEqual(expect.any(String));
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns 409 when registering with a duplicate email", async () => {
+    const app = buildApp();
+
+    try {
+      const first = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: {
+          email: "duplicate@example.com",
+          password: "password123",
+        },
+      });
+
+      expect(first.statusCode).toBe(201);
+
+      const second = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: {
+          email: "duplicate@example.com",
+          password: "password456",
+        },
+      });
+
+      expect(second.statusCode).toBe(409);
+      expect(second.json().message).toBe("Email already exists");
     } finally {
       await app.close();
     }

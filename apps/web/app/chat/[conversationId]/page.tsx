@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useSearchParams, usePathname, useRouter } from "next/navigation";
 import type { Message } from "@chat-agent/shared";
 import { listMessages } from "@/lib/api/conversations";
 import { Sidebar } from "@/components/chat/sidebar";
@@ -11,8 +11,12 @@ import { useChatStream } from "@/features/chat/use-chat-stream";
 
 export default function ConversationPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const conversationId = params.conversationId as string;
   const [messages, setMessages] = useState<Message[]>([]);
+  const autoMessageSentRef = useRef(false);
 
   const handleStreamComplete = useCallback(
     (response: string) => {
@@ -39,6 +43,15 @@ export default function ConversationPage() {
     ]);
     send(conversationId, message);
   }
+
+  useEffect(() => {
+    const message = searchParams.get("message");
+    if (!message || autoMessageSentRef.current) return;
+
+    autoMessageSentRef.current = true;
+    router.replace(pathname, { scroll: false });
+    handleSend(message);
+  }, [searchParams, pathname, router, handleSend]);
 
   return (
     <main className="chat-shell">

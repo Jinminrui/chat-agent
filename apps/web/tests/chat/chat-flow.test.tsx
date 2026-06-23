@@ -3,8 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useParams: () => ({ conversationId: "test-conv-1" }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/chat/test-conv-1",
 }));
 
 vi.mock("@/lib/api/conversations", () => ({
