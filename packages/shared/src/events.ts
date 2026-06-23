@@ -1,12 +1,9 @@
 import type { ToolCallStatus } from "./contracts";
 
 export type ChatStreamEvent =
-  | { type: "assistant.delta"; delta: string }
-  | {
-      type: "tool.status";
-      toolName: string;
-      status: ToolCallStatus;
-      label: string;
-    }
-  | { type: "assistant.done"; messageId: string }
-  | { type: "error"; message: string };
+  | { event: "delta"; id: number; data: { content: string } }
+  | { event: "tool.start"; id: number; data: { toolName: string; input: unknown } }
+  | { event: "tool.end"; id: number; data: { toolName: string; output: unknown } }
+  | { event: "done"; id: number; data: { messageId: string; totalTokens?: number } }
+  | { event: "error"; id: number; data: { code: number; msg: string } }
+  | { event: "heartbeat"; id: number; data: { timestamp: number } };

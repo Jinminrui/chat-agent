@@ -243,10 +243,28 @@ vi.mock("../../src/lib/prisma", () => ({
 }));
 
 function parseSseEvents(body: string) {
-  return body
-    .split("\n")
-    .filter((line) => line.startsWith("data: "))
-    .map((line) => JSON.parse(line.slice(6)));
+  const lines = body.split("\n");
+  const events: Array<{ event: string; id: number; data: unknown }> = [];
+  let currentEvent: { event?: string; id?: number; data?: string } = {};
+
+  for (const line of lines) {
+    if (line.startsWith("event: ")) {
+      currentEvent.event = line.slice(7);
+    } else if (line.startsWith("id: ")) {
+      currentEvent.id = parseInt(line.slice(4));
+    } else if (line.startsWith("data: ")) {
+      currentEvent.data = line.slice(6);
+    } else if (line === "" && currentEvent.event && currentEvent.data) {
+      events.push({
+        event: currentEvent.event,
+        id: currentEvent.id!,
+        data: JSON.parse(currentEvent.data),
+      });
+      currentEvent = {};
+    }
+  }
+
+  return events;
 }
 
 describe("chat stream route", () => {
@@ -305,14 +323,16 @@ describe("chat stream route", () => {
       const events = parseSseEvents(response.body);
 
       expect(events[0]).toEqual({
-        type: "assistant.delta",
-        delta: "你好，世界",
+        event: "delta",
+        id: 1,
+        data: { content: "你好，世界" },
       });
       expect(events[1]).toMatchObject({
-        type: "assistant.done",
+        event: "done",
+        id: 2,
       });
-      expect(events[1]?.messageId).toEqual(expect.any(String));
-      expect(events[1]?.messageId).not.toBe("");
+      expect(events[1]?.data.messageId).toEqual(expect.any(String));
+      expect(events[1]?.data.messageId).not.toBe("");
     } finally {
       await app.close();
     }

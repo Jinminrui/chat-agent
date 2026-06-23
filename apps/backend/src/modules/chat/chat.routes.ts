@@ -4,6 +4,8 @@ import type { ChatProvider } from "../providers/provider.types";
 import type { ToolMap } from "../tools/tool-registry";
 import { createAgentRuntime } from "./agent-runtime";
 import { createCheckpointService } from "./checkpoint.service";
+import { SSEWriter } from "../../lib/sse";
+import { ErrorCodes } from "../../lib/error-codes";
 
 type ChatRoutesOptions = {
   provider: ChatProvider;
@@ -41,7 +43,7 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
       const userId = request.session.userId;
 
       if (!userId) {
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
       }
 
       const { conversationId, message } = request.body as {
@@ -56,7 +58,7 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
       });
 
       if (!conversation || conversation.userId !== userId) {
-        return reply.code(404).send({ message: "Conversation not found" });
+        return reply.code(404).error(ErrorCodes.CHAT_CONVERSATION_NOT_FOUND, "会话不存在");
       }
 
       // Persist user message
@@ -69,16 +71,8 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         select: { id: true },
       });
 
-      // Hijack the response and set SSE headers before running the agent
-      reply.hijack();
-      reply.raw.writeHead(200, {
-        "content-type": "text/event-stream; charset=utf-8",
-        "cache-control": "no-cache",
-      });
-
-      function writeSseEvent(event: Record<string, unknown>) {
-        reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
+      // 使用 SSEWriter
+      const sse = new SSEWriter(reply);
 
       // Create agent runtime with streaming callbacks
       const runtime = createAgentRuntime({
@@ -87,10 +81,10 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         maxToolCalls: MAX_TOOL_CALLS,
         checkpointService,
         onToolCall({ toolName, input }) {
-          writeSseEvent({ type: "tool.status", status: "calling", toolName, input });
+          sse.toolStart(toolName, input);
         },
         onToolResult({ toolName, output }) {
-          writeSseEvent({ type: "tool.status", status: "done", toolName, output });
+          sse.toolEnd(toolName, output);
         },
       });
 
@@ -132,9 +126,9 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
       // Cleanup old checkpoints (keep latest 5)
       await checkpointService.cleanup(conversationId, 5);
 
-      // Write final events
-      writeSseEvent({ type: "assistant.delta", delta: result.content });
-      writeSseEvent({ type: "assistant.done", messageId: assistantMessage.id });
+      // 使用 SSEWriter 发送事件
+      sse.delta(result.content);
+      sse.done(assistantMessage.id);
 
       reply.raw.end();
     },
