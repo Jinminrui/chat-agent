@@ -8,12 +8,12 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     },
   });
 
-  if (!response.ok) {
-    throw new Error(`API_ERROR:${response.status}`);
-  }
-
   if (response.status === 204) {
     return undefined as T;
+  }
+
+  if (!response.ok) {
+    throw new Error(`API_ERROR:${response.status}`);
   }
 
   return response.json() as Promise<T>;

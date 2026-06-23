@@ -1,12 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/chat/sidebar";
 import { Composer } from "@/components/chat/composer";
+import { createConversation } from "@/lib/api/conversations";
 
 export default function ChatPage() {
-  function handleMessage(message: string) {
-    // TODO: create conversation and send message
-    console.log(message);
+  const router = useRouter();
+
+  async function handleMessage(message: string) {
+    const conversation = await createConversation();
+    router.push(`/chat/${conversation.id}?message=${encodeURIComponent(message)}`);
   }
 
   return (

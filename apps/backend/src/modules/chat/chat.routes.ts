@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { FastifyPluginAsync } from "fastify";
 import type { ChatProvider } from "../providers/provider.types";
@@ -70,12 +69,29 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         select: { id: true },
       });
 
-      // Create agent runtime and run
+      // Hijack the response and set SSE headers before running the agent
+      reply.hijack();
+      reply.raw.writeHead(200, {
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "no-cache",
+      });
+
+      function writeSseEvent(event: Record<string, unknown>) {
+        reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+
+      // Create agent runtime with streaming callbacks
       const runtime = createAgentRuntime({
         provider,
         tools,
         maxToolCalls: MAX_TOOL_CALLS,
         checkpointService,
+        onToolCall({ toolName, input }) {
+          writeSseEvent({ type: "tool.status", status: "calling", toolName, input });
+        },
+        onToolResult({ toolName, output }) {
+          writeSseEvent({ type: "tool.status", status: "done", toolName, output });
+        },
       });
 
       const result = await runtime.run({
@@ -110,22 +126,9 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
       // Cleanup old checkpoints (keep latest 5)
       await checkpointService.cleanup(conversationId, 5);
 
-      // Build SSE events
-      const messageId = assistantMessage.id;
-      const events = [
-        { type: "assistant.delta", delta: result.content },
-        { type: "assistant.done", messageId },
-      ];
-
-      reply.hijack();
-      reply.raw.writeHead(200, {
-        "content-type": "text/event-stream; charset=utf-8",
-        "cache-control": "no-cache",
-      });
-
-      for (const event of events) {
-        reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
+      // Write final events
+      writeSseEvent({ type: "assistant.delta", delta: result.content });
+      writeSseEvent({ type: "assistant.done", messageId: assistantMessage.id });
 
       reply.raw.end();
     },

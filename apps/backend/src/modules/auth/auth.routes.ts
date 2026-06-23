@@ -25,11 +25,23 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const user = await registerUser(request.body);
+      try {
+        const user = await registerUser(request.body);
 
-      request.session.userId = user.id;
+        request.session.userId = user.id;
 
-      return reply.code(201).send({ user });
+        return reply.code(201).send({ user });
+      } catch (error: unknown) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "name" in error &&
+          (error as { name: string }).name === "EMAIL_ALREADY_EXISTS"
+        ) {
+          return reply.code(409).send({ message: "Email already exists" });
+        }
+        throw error;
+      }
     },
   );
 

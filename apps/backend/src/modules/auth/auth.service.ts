@@ -14,17 +14,31 @@ export async function registerUser({
 }: RegisterBody): Promise<AuthUser> {
   const passwordHash = await bcrypt.hash(password, 10);
 
-  return prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-    },
-    select: {
-      id: true,
-      email: true,
-      createdAt: true,
-    },
-  });
+  try {
+    return await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+      },
+      select: {
+        id: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      const conflictError = new Error("EMAIL_ALREADY_EXISTS");
+      conflictError.name = "EMAIL_ALREADY_EXISTS";
+      throw conflictError;
+    }
+    throw error;
+  }
 }
 
 export async function loginUser({

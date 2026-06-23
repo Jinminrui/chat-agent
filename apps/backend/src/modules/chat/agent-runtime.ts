@@ -35,11 +35,23 @@ type RuntimeToolCall = {
   output: ToolOutput;
 };
 
+export type ToolCallEvent = {
+  toolName: string;
+  input: ToolInput;
+};
+
+export type ToolResultEvent = {
+  toolName: string;
+  output: ToolOutput;
+};
+
 type CreateAgentRuntimeInput = {
   provider: RuntimeProvider;
   tools: ToolMap;
   maxToolCalls: number;
   checkpointService?: CheckpointService;
+  onToolCall?: (event: ToolCallEvent) => void;
+  onToolResult?: (event: ToolResultEvent) => void;
 };
 
 type RunInput = {
@@ -101,7 +113,17 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
           throw createMaxToolCallsExceededError();
         }
 
+        config.onToolCall?.({
+          toolName: response.toolName,
+          input: response.input,
+        });
+
         const output = await registry.run(response.toolName, response.input);
+
+        config.onToolResult?.({
+          toolName: response.toolName,
+          output,
+        });
 
         toolCalls.push({
           toolName: response.toolName,
