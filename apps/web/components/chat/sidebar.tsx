@@ -21,11 +21,34 @@ export function Sidebar() {
   }, [router]);
 
   return (
-    <aside>
-      <button type="button" onClick={handleCreate}>新建会话</button>
-      <ul>
+    <aside style={{ background: "var(--bg-sidebar)", padding: "1rem" }}>
+      <button
+        type="button"
+        onClick={handleCreate}
+        style={{
+          background: "var(--accent-primary)",
+          color: "#fff",
+          border: "none",
+          padding: "0.5rem 1rem",
+          borderRadius: "4px",
+          cursor: "pointer",
+          width: "100%",
+        }}
+      >
+        新建会话
+      </button>
+      <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem" }}>
         {conversations.map((conv) => (
-          <li key={conv.id}>{conv.title}</li>
+          <li
+            key={conv.id}
+            style={{
+              padding: "0.5rem",
+              borderBottom: "1px solid var(--border-default)",
+              color: "var(--text-primary)",
+            }}
+          >
+            {conv.title}
+          </li>
         ))}
       </ul>
     </aside>

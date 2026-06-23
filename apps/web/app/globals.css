@@ -1,0 +1,19 @@
+@import "../styles/tokens.css";
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.chat-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .chat-shell {
+    grid-template-columns: 1fr;
+  }
+}

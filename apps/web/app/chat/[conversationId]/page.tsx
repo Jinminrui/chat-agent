@@ -41,11 +41,13 @@ export default function ConversationPage() {
   }
 
   return (
-    <main>
+    <main className="chat-shell">
       <Sidebar />
-      <section>
-        <MessageList messages={messages} />
-        {streaming && <div>{delta}</div>}
+      <section style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <MessageList messages={messages} />
+          {streaming && <div style={{ padding: "0 1rem", color: "var(--text-secondary)" }}>{delta}</div>}
+        </div>
         <Composer onSubmit={handleSend} />
       </section>
     </main>

@@ -10,10 +10,12 @@ export default function ChatPage() {
   }
 
   return (
-    <main>
+    <main className="chat-shell">
       <Sidebar />
-      <section>
-        <div>欢迎开始新的对话</div>
+      <section style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, padding: "2rem", color: "var(--text-secondary)", textAlign: "center" }}>
+          欢迎开始新的对话
+        </div>
         <Composer onSubmit={handleMessage} />
       </section>
     </main>
