@@ -667,3 +667,42 @@ src/lib/api/
 - 范围上严格收敛，优先保证登录、历史会话、流式对话和内置工具链路跑通
 
 这条路线兼顾了可演示性和可扩展性，适合作为后续实现计划的基础。
+
+---
+
+## 17. 实现交付说明
+
+### 17.1 已实现功能
+
+- 账号密码注册、登录、登出（httpOnly cookie 会话管理）
+- 个人会话列表与消息历史（含归属校验，用户无法访问他人会话）
+- SSE 流式聊天回复（assistant.delta / tool.status / assistant.done / error 事件）
+- 内置工具注册与最小 agent runtime（web_search、fetch_url、current_time）
+- 前后端共享类型契约（packages/shared）
+- 消息与工具调用持久化
+- 多轮上下文对话
+
+### 17.2 技术实现要点
+
+- 后端使用 Fastify + @fastify/session + @fastify/cookie 管理会话
+- Agent runtime 限制单次请求工具调用上限，工具失败走可控分支
+- 前端使用 React hooks 管理 SSE 流式状态
+- Prisma 管理 PostgreSQL 数据模型（User、Conversation、Message、ToolCall）
+- Vitest 覆盖后端集成测试、agent runtime 单元测试、前端组件测试
+
+### 17.3 测试覆盖
+
+- 认证流程：注册、登录、获取当前用户
+- 会话归属：创建会话、读取消息、越权访问返回 404
+- 聊天流式：SSE 事件流、工具调用链路
+- Agent runtime：工具调用上限、工具失败处理、checkpoint 逻辑
+- 前端组件：登录页、聊天页、会话列表、消息流式渲染、响应式布局
+
+### 17.4 环境变量
+
+```text
+DATABASE_URL=postgresql://...
+SESSION_SECRET=your-secret-key
+WEB_ORIGIN=http://localhost:3000
+OPENAI_API_KEY=sk-...（可选，用于真实模型调用）
+```
