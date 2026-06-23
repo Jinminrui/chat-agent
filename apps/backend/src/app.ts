@@ -24,7 +24,21 @@ const defaultTools: ToolMap = {
 };
 
 export function buildApp(options: BuildAppOptions = {}) {
-  const app = Fastify();
+  const app = Fastify({
+    logger: {
+      level: process.env.LOG_LEVEL || 'info',
+    },
+    genReqId: (req) => {
+      // 优先使用客户端传入的 requestId，否则自动生成
+      const clientRequestId = req.headers['x-request-id'];
+      if (clientRequestId && typeof clientRequestId === 'string') {
+        return clientRequestId;
+      }
+      return `req_${crypto.randomUUID()}`;
+    },
+    requestIdHeader: 'x-request-id',
+    requestIdLogLabel: 'requestId',
+  });
   const provider = options.provider ?? createOpenAIProvider();
   const tools = options.tools ?? defaultTools;
 
