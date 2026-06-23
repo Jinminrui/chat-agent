@@ -48,6 +48,28 @@ export const unauthorizedSchema = {
   additionalProperties: false,
 } as const;
 
+export const successResponseSchema = {
+  type: "object",
+  required: ["code", "msg", "data"],
+  properties: {
+    code: { type: "number" },
+    msg: { type: "string" },
+    data: {},
+  },
+  additionalProperties: false,
+} as const;
+
+export const errorResponseSchema = {
+  type: "object",
+  required: ["code", "msg", "data"],
+  properties: {
+    code: { type: "number" },
+    msg: { type: "string" },
+    data: { type: "null" },
+  },
+  additionalProperties: false,
+} as const;
+
 export type RegisterBody = {
   username: string;
   email: string;

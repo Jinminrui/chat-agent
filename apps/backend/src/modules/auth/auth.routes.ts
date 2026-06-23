@@ -4,10 +4,11 @@ import {
   type RegisterBody,
   loginBodySchema,
   registerBodySchema,
-  unauthorizedSchema,
-  userEnvelopeSchema,
+  successResponseSchema,
+  errorResponseSchema,
 } from "./auth.schema";
 import { getCurrentUser, loginUser, registerUser } from "./auth.service";
+import { ErrorCodes } from "../../lib/error-codes";
 
 declare module "@fastify/session" {
   interface FastifySessionObject {
@@ -22,8 +23,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       schema: {
         body: registerBodySchema,
         response: {
-          201: userEnvelopeSchema,
-          409: unauthorizedSchema,
+          201: successResponseSchema,
+          409: errorResponseSchema,
         },
       },
     },
@@ -34,7 +35,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
         request.session.userId = user.id;
         request.log.info({ userId: user.id }, 'user registered');
 
-        return reply.code(201).send({ user });
+        return reply.code(201).success({ user });
       } catch (error: unknown) {
         if (
           error &&
@@ -43,7 +44,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
           (error as { name: string }).name === "EMAIL_ALREADY_EXISTS"
         ) {
           request.log.warn({ email: (request.body as RegisterBody).email }, 'registration failed: email already exists');
-          return reply.code(409).send({ message: "Email already exists" });
+          return reply.code(409).error(ErrorCodes.AUTH_EMAIL_EXISTS, "邮箱已存在");
         }
         throw error;
       }
@@ -56,8 +57,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       schema: {
         body: loginBodySchema,
         response: {
-          200: userEnvelopeSchema,
-          401: unauthorizedSchema,
+          200: successResponseSchema,
+          401: errorResponseSchema,
         },
       },
     },
@@ -66,13 +67,13 @@ const authRoutes: FastifyPluginAsync = async (app) => {
 
       if (!user) {
         request.log.warn({ emailOrUsername: (request.body as LoginBody).emailOrUsername }, 'login failed: invalid credentials');
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_LOGIN_FAILED, "登录失败：凭证错误");
       }
 
       request.session.userId = user.id;
       request.log.info({ userId: user.id }, 'user logged in');
 
-      return { user };
+      return reply.success({ user });
     },
   );
 
@@ -89,8 +90,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         response: {
-          200: userEnvelopeSchema,
-          401: unauthorizedSchema,
+          200: successResponseSchema,
+          401: errorResponseSchema,
         },
       },
     },
@@ -98,17 +99,17 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       const userId = request.session.userId;
 
       if (!userId) {
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
       }
 
       const user = await getCurrentUser(userId);
 
       if (!user) {
         delete request.session.userId;
-        return reply.code(401).send({ message: "Unauthorized" });
+        return reply.code(401).error(ErrorCodes.AUTH_CREDENTIALS_INVALID, "登录凭证无效");
       }
 
-      return { user };
+      return reply.success({ user });
     },
   );
 };

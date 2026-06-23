@@ -122,8 +122,10 @@ describe("auth routes", () => {
       });
 
       expect(register.statusCode).toBe(201);
-      expect(register.json().user.email).toBe("demo@example.com");
-      expect(register.json().user.createdAt).toEqual(expect.any(String));
+      expect(register.json().code).toBe(0);
+      expect(register.json().msg).toBe("ok");
+      expect(register.json().data.user.email).toBe("demo@example.com");
+      expect(register.json().data.user.createdAt).toEqual(expect.any(String));
 
       const cookies = register.cookies;
       const me = await app.inject({
@@ -135,8 +137,10 @@ describe("auth routes", () => {
       });
 
       expect(me.statusCode).toBe(200);
-      expect(me.json().user.email).toBe("demo@example.com");
-      expect(me.json().user.createdAt).toEqual(expect.any(String));
+      expect(me.json().code).toBe(0);
+      expect(me.json().msg).toBe("ok");
+      expect(me.json().data.user.email).toBe("demo@example.com");
+      expect(me.json().data.user.createdAt).toEqual(expect.any(String));
     } finally {
       await app.close();
     }
@@ -169,7 +173,8 @@ describe("auth routes", () => {
       });
 
       expect(second.statusCode).toBe(409);
-      expect(second.json().message).toBe("Email already exists");
+      expect(second.json().code).toBe(1010);
+      expect(second.json().msg).toBe("邮箱已存在");
     } finally {
       await app.close();
     }

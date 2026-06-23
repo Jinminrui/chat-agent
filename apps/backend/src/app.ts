@@ -11,6 +11,7 @@ import { currentTimeTool } from "./modules/tools/builtins/current-time.tool";
 import { fetchUrlTool } from "./modules/tools/builtins/fetch-url.tool";
 import { webSearchTool } from "./modules/tools/builtins/web-search.tool";
 import authSessionPlugin from "./plugins/auth-session";
+import responseFormatPlugin from "./plugins/response-format";
 
 type BuildAppOptions = {
   provider?: ChatProvider;
@@ -48,6 +49,7 @@ export function buildApp(options: BuildAppOptions = {}) {
     credentials: true,
   });
   app.register(authSessionPlugin);
+  app.register(responseFormatPlugin);
   app.register(authRoutes, { prefix: "/auth" });
   app.register(chatRoutes, { prefix: "/chat", provider, prisma, tools });
   app.register(conversationRoutes, { prefix: "/conversations" });
