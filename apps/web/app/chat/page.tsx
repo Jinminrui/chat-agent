@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { AppSidebar } from "@/components/chat/sidebar";
 import { Composer } from "@/components/chat/composer";
 import { EmptyState } from "@/components/chat/empty-state";
@@ -26,13 +24,9 @@ export default function ChatPage() {
       <AppSidebar />
       <SidebarInset>
         <div className="flex h-screen flex-col">
-          <header className="flex h-14 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <h1 className="text-lg font-semibold">新会话</h1>
-            <Badge variant="secondary" className="ml-auto">
-              GPT-4
-            </Badge>
+          <header className="flex h-12 items-center gap-2 border-b border-border/40 px-4">
+            <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
+            <h1 className="text-sm font-medium text-foreground/80">新会话</h1>
           </header>
           <main className="flex-1 overflow-hidden">
             <EmptyState onSuggestionClick={handleSuggestionClick} />

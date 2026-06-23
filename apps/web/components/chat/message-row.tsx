@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,33 +17,50 @@ export function MessageRow({ message, toolStatus }: MessageRowProps) {
   const isUser = message.role === "user";
 
   return (
-    <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
-      <Avatar>
+    <div
+      className={cn(
+        "group flex gap-3 px-4 py-3 transition-colors hover:bg-muted/30",
+        isUser ? "flex-row-reverse" : "flex-row",
+      )}
+    >
+      <Avatar className="h-8 w-8 shrink-0">
         <AvatarFallback
           className={cn(
-            isUser ? "bg-primary text-primary-foreground" : "bg-muted",
+            "text-xs font-medium",
+            isUser
+              ? "bg-primary/10 text-primary"
+              : "bg-muted text-muted-foreground",
           )}
         >
           {isUser ? "你" : "AI"}
         </AvatarFallback>
       </Avatar>
-      <Card
+      <div
         className={cn(
-          "max-w-[80%]",
-          isUser ? "bg-primary text-primary-foreground" : "bg-muted",
+          "max-w-[80%] space-y-2",
+          isUser ? "items-end" : "items-start",
         )}
-        size="sm"
       >
-        <CardContent>
-          {toolStatus && toolStatus.status === "running" && (
-            <Badge variant="secondary" className="mb-2 gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              {toolStatus.label}
-            </Badge>
+        {toolStatus && toolStatus.status === "running" && (
+          <Badge
+            variant="secondary"
+            className="gap-1.5 bg-muted/50 text-xs font-normal"
+          >
+            <Loader2 className="h-3 w-3 animate-spin" />
+            {toolStatus.label}
+          </Badge>
+        )}
+        <div
+          className={cn(
+            "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+            isUser
+              ? "bg-primary text-primary-foreground rounded-br-md"
+              : "bg-muted/50 text-foreground rounded-bl-md",
           )}
+        >
           <p className="whitespace-pre-wrap">{message.content}</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
