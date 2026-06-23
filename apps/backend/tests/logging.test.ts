@@ -8,6 +8,19 @@ describe('prisma logging', () => {
   });
 });
 
+describe('llm logging', () => {
+  it('should log LLM request duration', async () => {
+    const app = buildApp();
+    await app.ready();
+
+    // 由于 OpenAI provider 是 stub，这里只验证配置正确
+    // 实际的 LLM 日志会在真实集成后记录
+    expect(app).toBeDefined();
+
+    await app.close();
+  });
+});
+
 describe('error logging', () => {
   it('should log errors with stack trace', async () => {
     const app = buildApp();

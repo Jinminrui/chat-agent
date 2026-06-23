@@ -39,7 +39,7 @@ export function buildApp(options: BuildAppOptions = {}) {
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
   });
-  const provider = options.provider ?? createOpenAIProvider();
+  const provider = options.provider ?? createOpenAIProvider({ logger: app.log });
   const tools = options.tools ?? defaultTools;
 
   app.register(cors, {
