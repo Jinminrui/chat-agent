@@ -31,7 +31,11 @@ importers:
 
   apps/web: {}
 
-  packages/shared: {}
+  packages/shared:
+    devDependencies:
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9
 
 packages:
 
