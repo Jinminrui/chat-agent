@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient, Prisma } from "@prisma/client";
 import type { FastifyPluginAsync } from "fastify";
 import type { ChatProvider } from "../providers/provider.types";
 import type { ToolMap } from "../tools/tool-registry";
@@ -116,8 +116,8 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
             conversationId,
             messageId: assistantMessage.id,
             toolName: tc.toolName,
-            toolInput: tc.input as Record<string, unknown>,
-            toolOutput: tc.output as Record<string, unknown>,
+            toolInput: tc.input as Prisma.InputJsonValue,
+            toolOutput: tc.output as Prisma.InputJsonValue,
             status: "completed",
           },
         });

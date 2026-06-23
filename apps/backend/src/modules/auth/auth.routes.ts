@@ -1,5 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import {
+  type LoginBody,
+  type RegisterBody,
   loginBodySchema,
   registerBodySchema,
   unauthorizedSchema,
@@ -21,12 +23,13 @@ const authRoutes: FastifyPluginAsync = async (app) => {
         body: registerBodySchema,
         response: {
           201: userEnvelopeSchema,
+          409: unauthorizedSchema,
         },
       },
     },
     async (request, reply) => {
       try {
-        const user = await registerUser(request.body);
+        const user = await registerUser(request.body as RegisterBody);
 
         request.session.userId = user.id;
 
@@ -57,7 +60,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const user = await loginUser(request.body);
+      const user = await loginUser(request.body as LoginBody);
 
       if (!user) {
         return reply.code(401).send({ message: "Unauthorized" });

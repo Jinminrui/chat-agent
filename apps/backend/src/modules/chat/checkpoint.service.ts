@@ -36,10 +36,15 @@ export function createCheckpointService(deps: {
     },
 
     async load(conversationId) {
-      return deps.prisma.checkpoint.findFirst({
+      const record = await deps.prisma.checkpoint.findFirst({
         where: { conversationId },
         orderBy: { messageIndex: "desc" },
       });
+      if (!record) return null;
+      return {
+        ...record,
+        state: record.state as CheckpointState,
+      };
     },
 
     async cleanup(conversationId, keepLatest) {
