@@ -8,10 +8,14 @@ export async function login(emailOrUsername: string, password: string): Promise<
   });
 }
 
-export async function register(email: string, password: string): Promise<User> {
+export async function register(params: {
+  username: string;
+  email: string;
+  password: string;
+}): Promise<User> {
   return apiRequest<User>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(params),
   });
 }
 

@@ -9,6 +9,7 @@ type AuthUser = {
 };
 
 export async function registerUser({
+  username,
   email,
   password,
 }: RegisterBody): Promise<AuthUser> {
@@ -17,6 +18,7 @@ export async function registerUser({
   try {
     return await prisma.user.create({
       data: {
+        username,
         email,
         passwordHash,
       },

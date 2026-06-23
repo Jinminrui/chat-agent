@@ -115,6 +115,7 @@ describe("auth routes", () => {
         method: "POST",
         url: "/auth/register",
         payload: {
+          username: "demo",
           email: "demo@example.com",
           password: "password123",
         },
@@ -149,6 +150,7 @@ describe("auth routes", () => {
         method: "POST",
         url: "/auth/register",
         payload: {
+          username: "user1",
           email: "duplicate@example.com",
           password: "password123",
         },
@@ -160,6 +162,7 @@ describe("auth routes", () => {
         method: "POST",
         url: "/auth/register",
         payload: {
+          username: "user2",
           email: "duplicate@example.com",
           password: "password456",
         },
@@ -186,6 +189,7 @@ describe("auth routes", () => {
           origin: "http://localhost:4000",
         },
         payload: {
+          username: "cors-user",
           email: "cors@example.com",
           password: "password123",
         },

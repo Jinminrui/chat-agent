@@ -1,45 +1,75 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { register } from "@/lib/api/auth";
 
 export function RegisterForm() {
-  const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
     setLoading(true);
 
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
     try {
-      await register(email, password);
-      window.location.href = "/";
-    } catch {
-      setError("注册失败，该邮箱可能已被注册");
+      await register({ username, email, password });
+      router.push("/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "注册失败");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && <p role="alert">{error}</p>}
-      <label>
-        邮箱
-        <input name="email" type="email" required />
-      </label>
-      <label>
-        密码
-        <input name="password" type="password" minLength={8} required />
-      </label>
-      <button type="submit" disabled={loading}>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="username">用户名</Label>
+        <Input
+          id="username"
+          placeholder="请输入用户名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">邮箱</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="请输入邮箱"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">密码</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="请输入密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "注册中..." : "注册"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,7 +1,8 @@
 export const registerBodySchema = {
   type: "object",
-  required: ["email", "password"],
+  required: ["username", "email", "password"],
   properties: {
+    username: { type: "string", minLength: 1 },
     email: { type: "string", format: "email" },
     password: { type: "string", minLength: 8 },
   },
@@ -48,6 +49,7 @@ export const unauthorizedSchema = {
 } as const;
 
 export type RegisterBody = {
+  username: string;
   email: string;
   password: string;
 };

@@ -275,7 +275,7 @@ describe("chat stream route", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "chat@example.com", password: "password123" },
+        payload: { username: "chat", email: "chat@example.com", password: "password123" },
       });
       const session = register.cookies[0]?.value ?? "";
 
@@ -353,14 +353,14 @@ describe("chat stream route", () => {
       const ownerReg = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "owner@example.com", password: "password123" },
+        payload: { username: "owner", email: "owner@example.com", password: "password123" },
       });
       const ownerSession = ownerReg.cookies[0]?.value ?? "";
 
       const otherReg = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "other@example.com", password: "password123" },
+        payload: { username: "other", email: "other@example.com", password: "password123" },
       });
       const otherSession = otherReg.cookies[0]?.value ?? "";
 
@@ -401,7 +401,7 @@ describe("chat stream route", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "persist@example.com", password: "password123" },
+        payload: { username: "persist", email: "persist@example.com", password: "password123" },
       });
       const session = register.cookies[0]?.value ?? "";
 

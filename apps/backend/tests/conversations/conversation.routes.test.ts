@@ -209,7 +209,7 @@ describe("conversation routes", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "owner@example.com", password: "password123" },
+        payload: { username: "owner", email: "owner@example.com", password: "password123" },
       });
 
       const session = register.cookies[0]?.value ?? "";
@@ -243,7 +243,7 @@ describe("conversation routes", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "reader@example.com", password: "password123" },
+        payload: { username: "reader", email: "reader@example.com", password: "password123" },
       });
 
       const session = register.cookies[0]?.value ?? "";
@@ -306,7 +306,7 @@ describe("conversation routes", () => {
       const ownerRegister = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "owner-a@example.com", password: "password123" },
+        payload: { username: "owner-a", email: "owner-a@example.com", password: "password123" },
       });
       const ownerSession = ownerRegister.cookies[0]?.value ?? "";
 
@@ -320,7 +320,7 @@ describe("conversation routes", () => {
       const intruderRegister = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "owner-b@example.com", password: "password123" },
+        payload: { username: "owner-b", email: "owner-b@example.com", password: "password123" },
       });
       const intruderSession = intruderRegister.cookies[0]?.value ?? "";
 

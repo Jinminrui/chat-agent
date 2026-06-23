@@ -113,7 +113,7 @@ describe("chat persistence", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "flow@example.com", password: "password123" },
+        payload: { username: "flow", email: "flow@example.com", password: "password123" },
       });
 
       const session = register.cookies[0]?.value ?? "";
@@ -174,7 +174,7 @@ describe("chat persistence", () => {
       const register = await app.inject({
         method: "POST",
         url: "/auth/register",
-        payload: { email: "tool@example.com", password: "password123" },
+        payload: { username: "tool", email: "tool@example.com", password: "password123" },
       });
 
       const session = register.cookies[0]?.value ?? "";
