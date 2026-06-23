@@ -2,7 +2,7 @@ import { api } from './client';
 import type { Conversation, ChatMessage, CreateConversationResponse, ListConversationsResponse, ListMessagesResponse } from '@/types/chat';
 
 export async function createConversation(): Promise<Conversation> {
-  const response = await api.post<CreateConversationResponse>('/api/conversations');
+  const response = await api.post<CreateConversationResponse>('/api/conversations', {});
   return response.data.conversation;
 }
 
