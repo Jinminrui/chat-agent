@@ -1,10 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-
-type RuntimeMessage = {
-  role: "user" | "assistant" | "tool";
-  content: string;
-  toolName?: string;
-};
+import type { RuntimeMessage } from "./agent-runtime";
 
 type CheckpointState = {
   messages: RuntimeMessage[];

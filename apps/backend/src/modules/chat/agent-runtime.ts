@@ -6,7 +6,7 @@ import {
 } from "../tools/tool-registry";
 import type { CheckpointService } from "./checkpoint.service";
 
-type RuntimeMessage = {
+export type RuntimeMessage = {
   role: "user" | "assistant" | "tool";
   content: string;
   toolName?: string;

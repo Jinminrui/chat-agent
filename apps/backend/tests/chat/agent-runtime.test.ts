@@ -198,12 +198,12 @@ describe("agent runtime with checkpoints", () => {
       maxToolCalls: 5,
     });
 
-    await runtime.run({
+    const result = await runtime.run({
       messages: [{ role: "user", content: "hi" }],
       conversationId: "conv-1",
     });
 
-    // No error thrown, just no checkpoint saved
+    expect(result.content).toBe("done");
   });
 
   it("resumes from checkpoint by loading saved messages", async () => {
