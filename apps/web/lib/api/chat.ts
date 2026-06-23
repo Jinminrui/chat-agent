@@ -20,11 +20,48 @@ export async function streamChat(
     throw new Error(`HTTP ${response.status}`);
   }
 
-  const text = await response.text();
-  const lines = text.split("\n").filter((line) => line.startsWith("data: "));
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('No response body');
+  }
 
-  for (const line of lines) {
-    handlers.onEvent(JSON.parse(line.slice(6)));
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let currentEvent: { event?: string; id?: number; data?: string } = {};
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (line.startsWith('event: ')) {
+        currentEvent.event = line.slice(7);
+      } else if (line.startsWith('id: ')) {
+        currentEvent.id = parseInt(line.slice(4));
+      } else if (line.startsWith('data: ')) {
+        currentEvent.data = line.slice(6);
+      } else if (line === '' && currentEvent.event && currentEvent.data) {
+        handlers.onEvent({
+          event: currentEvent.event as ChatStreamEvent['event'],
+          id: currentEvent.id!,
+          data: JSON.parse(currentEvent.data),
+        });
+        currentEvent = {};
+      }
+    }
+  }
+
+  // Process any remaining data in buffer
+  if (currentEvent.event && currentEvent.data) {
+    handlers.onEvent({
+      event: currentEvent.event as ChatStreamEvent['event'],
+      id: currentEvent.id!,
+      data: JSON.parse(currentEvent.data),
+    });
   }
 
   handlers.onComplete?.();

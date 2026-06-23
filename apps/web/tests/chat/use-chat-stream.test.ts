@@ -36,8 +36,8 @@ describe("useChatStream", () => {
 
   it("accumulates delta from assistant.delta events", async () => {
     mockStreamChat.mockImplementation(async (_input, handlers) => {
-      handlers.onEvent({ type: "assistant.delta", delta: "Hello" });
-      handlers.onEvent({ type: "assistant.delta", delta: " world" });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "Hello" } });
+      handlers.onEvent({ event: "delta", id: 2, data: { content: " world" } });
       handlers.onComplete?.();
     });
 
@@ -66,8 +66,8 @@ describe("useChatStream", () => {
 
   it("calls onComplete callback with accumulated response", async () => {
     mockStreamChat.mockImplementation(async (_input, handlers) => {
-      handlers.onEvent({ type: "assistant.delta", delta: "Hi" });
-      handlers.onEvent({ type: "assistant.delta", delta: " there" });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "Hi" } });
+      handlers.onEvent({ event: "delta", id: 2, data: { content: " there" } });
       handlers.onComplete?.();
     });
 
@@ -84,7 +84,7 @@ describe("useChatStream", () => {
   it("resets delta and error on new send", async () => {
     mockStreamChat.mockRejectedValueOnce(new Error("fail"));
     mockStreamChat.mockImplementationOnce(async (_input, handlers) => {
-      handlers.onEvent({ type: "assistant.delta", delta: "ok" });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "ok" } });
       handlers.onComplete?.();
     });
 

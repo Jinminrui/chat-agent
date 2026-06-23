@@ -22,9 +22,11 @@ export function useChatStream(opts?: { onComplete?: (response: string) => void }
           { conversationId, message },
           {
             onEvent(event: ChatStreamEvent) {
-              if (event.type === "assistant.delta") {
-                accumulatedRef.current += event.delta;
+              if (event.event === "delta") {
+                accumulatedRef.current += event.data.content;
                 setDelta(accumulatedRef.current);
+              } else if (event.event === "error") {
+                throw new Error(event.data.msg);
               }
             },
             onComplete() {

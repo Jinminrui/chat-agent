@@ -8,17 +8,33 @@ describe("streamChat", () => {
 
   it("parses SSE data lines and calls onEvent for each", async () => {
     const sseBody = [
-      'data: {"type":"assistant.delta","delta":"Hello"}',
-      'data: {"type":"assistant.delta","delta":" world"}',
-      'data: {"type":"assistant.done","messageId":"msg-1"}',
+      "event: delta",
+      "id: 1",
+      'data: {"content":"Hello"}',
+      "",
+      "event: delta",
+      "id: 2",
+      'data: {"content":" world"}',
+      "",
+      "event: done",
+      "id: 3",
+      'data: {"messageId":"msg-1"}',
       "",
     ].join("\n");
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(sseBody));
+        controller.close();
+      },
+    });
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        text: () => Promise.resolve(sseBody),
+        body: stream,
       }),
     );
 
@@ -28,25 +44,33 @@ describe("streamChat", () => {
     await streamChat({ conversationId: "conv-1", message: "Hi" }, { onEvent, onComplete });
 
     expect(onEvent).toHaveBeenCalledTimes(3);
-    expect(onEvent).toHaveBeenCalledWith({ type: "assistant.delta", delta: "Hello" });
-    expect(onEvent).toHaveBeenCalledWith({ type: "assistant.delta", delta: " world" });
-    expect(onEvent).toHaveBeenCalledWith({ type: "assistant.done", messageId: "msg-1" });
+    expect(onEvent).toHaveBeenCalledWith({ event: "delta", id: 1, data: { content: "Hello" } });
+    expect(onEvent).toHaveBeenCalledWith({ event: "delta", id: 2, data: { content: " world" } });
+    expect(onEvent).toHaveBeenCalledWith({ event: "done", id: 3, data: { messageId: "msg-1" } });
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
   it("ignores non-data lines in SSE body", async () => {
     const sseBody = [
-      "event: message",
-      'data: {"type":"assistant.delta","delta":"test"}',
+      "event: delta",
       "id: 123",
+      'data: {"content":"test"}',
       "",
     ].join("\n");
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(sseBody));
+        controller.close();
+      },
+    });
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        text: () => Promise.resolve(sseBody),
+        body: stream,
       }),
     );
 
@@ -54,7 +78,7 @@ describe("streamChat", () => {
     await streamChat({ conversationId: "conv-1", message: "Hi" }, { onEvent });
 
     expect(onEvent).toHaveBeenCalledTimes(1);
-    expect(onEvent).toHaveBeenCalledWith({ type: "assistant.delta", delta: "test" });
+    expect(onEvent).toHaveBeenCalledWith({ event: "delta", id: 123, data: { content: "test" } });
   });
 
   it("throws on non-ok HTTP response", async () => {
