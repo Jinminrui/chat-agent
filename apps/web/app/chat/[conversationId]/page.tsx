@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, usePathname, useRouter } from "next/navigation";
 import type { Message } from "@chat-agent/shared";
 import { listMessages } from "@/lib/api/conversations";
-import { Sidebar } from "@/components/chat/sidebar";
+import { AppSidebar } from "@/components/chat/sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { Composer } from "@/components/chat/composer";
 import { useChatStream } from "@/features/chat/use-chat-stream";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 export default function ConversationPage() {
   const params = useParams();
@@ -54,15 +55,15 @@ export default function ConversationPage() {
   }, [searchParams, pathname, router, handleSend]);
 
   return (
-    <main className="chat-shell">
-      <Sidebar />
-      <section style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflow: "auto" }}>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <div className="flex flex-1 flex-col overflow-auto">
           <MessageList messages={messages} />
-          {streaming && <div style={{ padding: "0 1rem", color: "var(--text-secondary)" }}>{delta}</div>}
+          {streaming && <div className="px-4 text-muted-foreground">{delta}</div>}
         </div>
         <Composer onSubmit={handleSend} />
-      </section>
-    </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

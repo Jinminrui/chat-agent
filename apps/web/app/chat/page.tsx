@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Sidebar } from "@/components/chat/sidebar";
+import { AppSidebar } from "@/components/chat/sidebar";
 import { Composer } from "@/components/chat/composer";
 import { createConversation } from "@/lib/api/conversations";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 export default function ChatPage() {
   const router = useRouter();
@@ -14,14 +15,14 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="chat-shell">
-      <Sidebar />
-      <section style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, padding: "2rem", color: "var(--text-secondary)", textAlign: "center" }}>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <div className="flex flex-1 flex-col items-center justify-center p-8 text-muted-foreground">
           欢迎开始新的对话
         </div>
         <Composer onSubmit={handleMessage} />
-      </section>
-    </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
