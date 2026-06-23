@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import type { Message } from "@chat-agent/shared";
 import { listMessages } from "@/lib/api/conversations";
@@ -13,7 +13,20 @@ export default function ConversationPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
   const [messages, setMessages] = useState<Message[]>([]);
-  const { streaming, delta, send } = useChatStream();
+
+  const handleStreamComplete = useCallback(
+    (response: string) => {
+      if (response) {
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), conversationId, role: "assistant", content: response, createdAt: new Date().toISOString() },
+        ]);
+      }
+    },
+    [conversationId],
+  );
+
+  const { streaming, delta, send } = useChatStream({ onComplete: handleStreamComplete });
 
   useEffect(() => {
     listMessages(conversationId).then((data) => setMessages(data.items));

@@ -16,6 +16,10 @@ export async function streamChat(
     body: JSON.stringify(input),
   });
 
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
   const text = await response.text();
   const lines = text.split("\n").filter((line) => line.startsWith("data: "));
 
