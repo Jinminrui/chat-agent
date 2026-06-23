@@ -52,5 +52,15 @@ export function buildApp(options: BuildAppOptions = {}) {
   app.register(chatRoutes, { prefix: "/chat", provider, prisma, tools });
   app.register(conversationRoutes, { prefix: "/conversations" });
 
+  // 全局错误处理器
+  app.setErrorHandler((error, request, reply) => {
+    request.log.error({
+      err: error,
+      statusCode: error.statusCode || 500,
+    }, error.message);
+
+    reply.code(error.statusCode || 500).send({ message: 'Internal Server Error' });
+  });
+
   return app;
 }

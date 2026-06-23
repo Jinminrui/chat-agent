@@ -1,6 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { buildApp } from '../src/app';
 
+describe('error logging', () => {
+  it('should log errors with stack trace', async () => {
+    const app = buildApp();
+
+    // 添加一个会抛出错误的路由用于测试
+    app.get('/test-error', async () => {
+      throw new Error('Test error message');
+    });
+
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/test-error',
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toEqual({
+      message: 'Internal Server Error',
+    });
+
+    await app.close();
+  });
+});
+
 describe('logging', () => {
   it('should generate requestId for each request', async () => {
     const app = buildApp();
