@@ -1,0 +1,15 @@
+{
+  "name": "@chat-agent/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "echo \"lint not configured yet\"",
+    "test": "vitest run --root ../.."
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  }
+}

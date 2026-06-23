@@ -81,7 +81,7 @@ prisma/
 - Create: `packages/shared/src/index.ts`
 - Create: `.gitignore`
 
-- [ ] **Step 1: 写根目录 workspace 配置的失败检查**
+- [x] **Step 1: 写根目录 workspace 配置的失败检查**
 
 ```bash
 test -f /Users/jinminrui/Desktop/chat-agent/package.json && echo "exists" || echo "missing"
@@ -89,7 +89,7 @@ test -f /Users/jinminrui/Desktop/chat-agent/package.json && echo "exists" || ech
 
 Expected: 输出 `missing`
 
-- [ ] **Step 2: 写最小 workspace 配置**
+- [x] **Step 2: 写最小 workspace 配置**
 
 ```json
 {
@@ -142,13 +142,13 @@ export type ChatStreamEvent =
   | { type: "error"; message: string };
 ```
 
-- [ ] **Step 3: 运行 workspace 基础验证**
+- [x] **Step 3: 运行 workspace 基础验证**
 
 Run: `pnpm install`
 
 Expected: 成功生成 `pnpm-lock.yaml`，无 `ERR_PNPM_NO_MATCHING_VERSION` 错误
 
-- [ ] **Step 4: 提交初始化骨架**
+- [x] **Step 4: 提交初始化骨架**
 
 ```bash
 git init
@@ -164,7 +164,7 @@ git commit -m "chore: initialize chat agent workspace"
 - Create: `apps/backend/tests/prisma/schema.test.ts`
 - Modify: `apps/backend/package.json`
 
-- [ ] **Step 1: 先写数据库 schema 的失败测试**
+- [x] **Step 1: 先写数据库 schema 的失败测试**
 
 ```ts
 import { readFileSync } from "node:fs";
@@ -182,13 +182,13 @@ describe("prisma schema", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter backend test apps/backend/tests/prisma/schema.test.ts`
 
 Expected: FAIL，提示 `ENOENT` 或找不到 `schema.prisma`
 
-- [ ] **Step 3: 写最小 Prisma schema 和客户端入口**
+- [x] **Step 3: 写最小 Prisma schema 和客户端入口**
 
 ```prisma
 generator client {
@@ -260,13 +260,13 @@ if (process.env.NODE_ENV !== "production") {
 }
 ```
 
-- [ ] **Step 4: 运行测试并生成 Prisma Client**
+- [x] **Step 4: 运行测试并生成 Prisma Client**
 
 Run: `pnpm --filter backend exec prisma generate && pnpm --filter backend test apps/backend/tests/prisma/schema.test.ts`
 
 Expected: `prisma generate` 成功；测试 PASS
 
-- [ ] **Step 5: 提交数据库基础**
+- [x] **Step 5: 提交数据库基础**
 
 ```bash
 git add prisma/schema.prisma apps/backend/src/lib/prisma.ts apps/backend/tests/prisma/schema.test.ts apps/backend/package.json
@@ -281,7 +281,7 @@ git commit -m "feat: add prisma data model"
 - Create: `packages/shared/src/events.ts`
 - Create: `packages/shared/tests/contracts.test.ts`
 
-- [ ] **Step 1: 先写共享契约测试**
+- [x] **Step 1: 先写共享契约测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -311,13 +311,13 @@ describe("shared contracts", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter @chat-agent/shared test packages/shared/tests/contracts.test.ts`
 
 Expected: FAIL，提示缺少 `User` 或 `Conversation` 导出
 
-- [ ] **Step 3: 补齐共享类型**
+- [x] **Step 3: 补齐共享类型**
 
 ```ts
 export type User = {
@@ -363,13 +363,13 @@ export * from "./contracts";
 export * from "./events";
 ```
 
-- [ ] **Step 4: 运行共享包测试**
+- [x] **Step 4: 运行共享包测试**
 
 Run: `pnpm --filter @chat-agent/shared test packages/shared/tests/contracts.test.ts`
 
 Expected: PASS
 
-- [ ] **Step 5: 提交共享契约**
+- [x] **Step 5: 提交共享契约**
 
 ```bash
 git add packages/shared/src packages/shared/tests
@@ -386,7 +386,7 @@ git commit -m "feat: add shared frontend backend contracts"
 - Create: `apps/backend/tests/auth/auth.routes.test.ts`
 - Modify: `apps/backend/src/app.ts`
 
-- [ ] **Step 1: 先写认证路由集成测试**
+- [x] **Step 1: 先写认证路由集成测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -423,13 +423,13 @@ describe("auth routes", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter backend test apps/backend/tests/auth/auth.routes.test.ts`
 
 Expected: FAIL，提示 `buildApp` 未定义或 `/auth/register` 返回 404
 
-- [ ] **Step 3: 写最小认证实现**
+- [x] **Step 3: 写最小认证实现**
 
 ```ts
 import fp from "fastify-plugin";
@@ -489,13 +489,13 @@ app.post("/auth/register", async (request, reply) => {
 });
 ```
 
-- [ ] **Step 4: 运行认证测试**
+- [x] **Step 4: 运行认证测试**
 
 Run: `pnpm --filter backend test apps/backend/tests/auth/auth.routes.test.ts`
 
 Expected: PASS
 
-- [ ] **Step 5: 提交认证基础**
+- [x] **Step 5: 提交认证基础**
 
 ```bash
 git add apps/backend/src/plugins/auth-session.ts apps/backend/src/modules/auth apps/backend/src/app.ts apps/backend/tests/auth/auth.routes.test.ts
@@ -510,7 +510,7 @@ git commit -m "feat: add backend auth routes and cors setup"
 - Create: `apps/backend/tests/conversations/conversation.routes.test.ts`
 - Modify: `apps/backend/src/app.ts`
 
-- [ ] **Step 1: 先写会话接口测试**
+- [x] **Step 1: 先写会话接口测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -549,13 +549,13 @@ describe("conversation routes", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter backend test apps/backend/tests/conversations/conversation.routes.test.ts`
 
 Expected: FAIL，提示 `/conversations` 返回 404
 
-- [ ] **Step 3: 写最小会话实现**
+- [x] **Step 3: 写最小会话实现**
 
 ```ts
 import { prisma } from "../../lib/prisma";
@@ -592,13 +592,13 @@ export async function listMessages(userId: string, conversationId: string) {
 }
 ```
 
-- [ ] **Step 4: 运行会话测试**
+- [x] **Step 4: 运行会话测试**
 
 Run: `pnpm --filter backend test apps/backend/tests/conversations/conversation.routes.test.ts`
 
 Expected: PASS
 
-- [ ] **Step 5: 提交会话接口**
+- [x] **Step 5: 提交会话接口**
 
 ```bash
 git add apps/backend/src/modules/conversations apps/backend/src/app.ts apps/backend/tests/conversations/conversation.routes.test.ts
@@ -615,7 +615,7 @@ git commit -m "feat: add conversation history routes"
 - Create: `apps/backend/src/modules/chat/agent-runtime.ts`
 - Create: `apps/backend/tests/chat/agent-runtime.test.ts`
 
-- [ ] **Step 1: 先写 runtime 测试**
+- [x] **Step 1: 先写 runtime 测试**
 
 ```ts
 import { describe, expect, it, vi } from "vitest";
@@ -655,13 +655,13 @@ describe("agent runtime", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter backend test apps/backend/tests/chat/agent-runtime.test.ts`
 
 Expected: FAIL，提示 `createAgentRuntime` 未定义
 
-- [ ] **Step 3: 写最小工具注册与 runtime**
+- [x] **Step 3: 写最小工具注册与 runtime**
 
 ```ts
 export type ToolHandler = (input: unknown) => Promise<unknown>;
@@ -725,13 +725,13 @@ export function createAgentRuntime(config: {
 }
 ```
 
-- [ ] **Step 4: 运行 runtime 测试**
+- [x] **Step 4: 运行 runtime 测试**
 
 Run: `pnpm --filter backend test apps/backend/tests/chat/agent-runtime.test.ts`
 
 Expected: PASS
 
-- [ ] **Step 5: 提交 runtime 基础**
+- [x] **Step 5: 提交 runtime 基础**
 
 ```bash
 git add apps/backend/src/modules/tools apps/backend/src/modules/chat/agent-runtime.ts apps/backend/tests/chat/agent-runtime.test.ts
@@ -747,7 +747,7 @@ git commit -m "feat: add minimal agent runtime"
 - Create: `apps/backend/tests/chat/chat.routes.test.ts`
 - Modify: `apps/backend/src/app.ts`
 
-- [ ] **Step 1: 先写 SSE 聊天路由测试**
+- [x] **Step 1: 先写 SSE 聊天路由测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -778,13 +778,13 @@ describe("chat stream route", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `pnpm --filter backend test apps/backend/tests/chat/chat.routes.test.ts`
 
 Expected: FAIL，提示 `/chat/stream` 返回 404
 
-- [ ] **Step 3: 写最小 Provider 适配与 SSE 路由**
+- [x] **Step 3: 写最小 Provider 适配与 SSE 路由**
 
 ```ts
 export type ProviderResult =
@@ -809,13 +809,13 @@ reply
   );
 ```
 
-- [ ] **Step 4: 运行聊天路由测试**
+- [x] **Step 4: 运行聊天路由测试**
 
 Run: `pnpm --filter backend test apps/backend/tests/chat/chat.routes.test.ts`
 
 Expected: PASS
 
-- [ ] **Step 5: 提交 SSE 聊天接口**
+- [x] **Step 5: 提交 SSE 聊天接口**
 
 ```bash
 git add apps/backend/src/modules/providers apps/backend/src/modules/chat/chat.routes.ts apps/backend/src/app.ts apps/backend/tests/chat/chat.routes.test.ts
