@@ -1,187 +1,89 @@
+/**
+ * Chat persistence tests
+ *
+ * These tests verify that the /chat/stream route correctly persists
+ * user messages, assistant messages, and tool calls to the database.
+ *
+ * NOTE: The production code (chat.routes.ts) was already implemented
+ * in commit 754da9a before these tests were written. TDD was not
+ * applicable because the implementation pre-existed. These tests
+ * serve as regression coverage for the existing behavior.
+ */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildApp } from "../../src/app";
 
-type MockUserRecord = {
-  id: string;
-  email: string;
-  passwordHash: string;
-  createdAt: string;
-};
+// Lightweight Prisma mock — tracks calls and returns minimal objects.
+// No in-memory Maps or select-field filtering; just enough to exercise
+// the persistence paths and assert on the calls that matter.
 
-type MockConversationRecord = {
-  id: string;
-  userId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type MockMessageRecord = {
+let nextId = 1;
+const createdMessages: Array<{
   id: string;
   conversationId: string;
   role: string;
   content: string;
   createdAt: string;
-};
-
-const users = new Map<string, MockUserRecord>();
-const conversations = new Map<string, MockConversationRecord>();
-const messages = new Map<string, MockMessageRecord>();
-let nextUserId = 1;
-let nextConversationId = 1;
-let nextMessageId = 1;
+}> = [];
+const toolCallCreates: Array<Record<string, unknown>> = [];
 
 vi.mock("../../src/lib/prisma", () => ({
   prisma: {
     user: {
-      create: vi.fn(
-        async ({
-          data,
-          select,
-        }: {
-          data: { email: string; passwordHash: string };
-          select?: Record<string, boolean>;
-        }) => {
-          const user = {
-            id: `user-${nextUserId++}`,
-            email: data.email,
-            passwordHash: data.passwordHash,
-            createdAt: new Date().toISOString(),
-          };
-          users.set(user.id, user);
-          return {
-            ...(select?.id ? { id: user.id } : {}),
-            ...(select?.email ? { email: user.email } : {}),
-            ...(select?.createdAt ? { createdAt: user.createdAt } : {}),
-          };
-        },
-      ),
-      findUnique: vi.fn(
-        async ({
-          where,
-          select,
-        }: {
-          where: { id: string };
-          select?: Record<string, boolean>;
-        }) => {
-          const user = users.get(where.id);
-          if (!user) return null;
-          return {
-            ...(select?.id ? { id: user.id } : {}),
-            ...(select?.email ? { email: user.email } : {}),
-            ...(select?.createdAt ? { createdAt: user.createdAt } : {}),
-          };
-        },
-      ),
+      create: vi.fn(async () => ({
+        id: `user-${nextId++}`,
+        email: "test@example.com",
+        createdAt: new Date().toISOString(),
+      })),
+      findUnique: vi.fn(async ({ where }: { where: { id?: string; email?: string } }) => {
+        // Return a mock user for any lookup (session or email)
+        return {
+          id: where.id ?? `user-1`,
+          email: where.email ?? "test@example.com",
+          passwordHash: "$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ12",
+          createdAt: new Date().toISOString(),
+        };
+      }),
     },
     conversation: {
-      create: vi.fn(
-        async ({
-          data,
-          select,
-        }: {
-          data: { userId: string; title: string };
-          select?: Record<string, boolean>;
-        }) => {
-          const now = new Date().toISOString();
-          const conversation = {
-            id: `conversation-${nextConversationId++}`,
-            userId: data.userId,
-            title: data.title,
-            createdAt: now,
-            updatedAt: now,
-          };
-          conversations.set(conversation.id, conversation);
-          return {
-            ...(select?.id ? { id: conversation.id } : {}),
-            ...(select?.userId ? { userId: conversation.userId } : {}),
-            ...(select?.title ? { title: conversation.title } : {}),
-            ...(select?.createdAt ? { createdAt: conversation.createdAt } : {}),
-            ...(select?.updatedAt ? { updatedAt: conversation.updatedAt } : {}),
-          };
-        },
-      ),
-      findUnique: vi.fn(
-        async ({
-          where,
-          select,
-        }: {
-          where: { id: string };
-          select?: Record<string, boolean>;
-        }) => {
-          const conversation = conversations.get(where.id);
-          if (!conversation) return null;
-          return {
-            ...(select?.id ? { id: conversation.id } : {}),
-            ...(select?.userId ? { userId: conversation.userId } : {}),
-            ...(select?.title ? { title: conversation.title } : {}),
-            ...(select?.createdAt ? { createdAt: conversation.createdAt } : {}),
-            ...(select?.updatedAt ? { updatedAt: conversation.updatedAt } : {}),
-          };
-        },
-      ),
+      create: vi.fn(async () => ({
+        id: `conv-${nextId++}`,
+        userId: "user-1",
+        title: "New conversation",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
+      findUnique: vi.fn(async ({ where }: { where: { id: string } }) => ({
+        id: where.id,
+        userId: "user-1",
+        title: "Test",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
     },
     message: {
       create: vi.fn(
-        async ({
-          data,
-          select,
-        }: {
-          data: { conversationId: string; role: string; content: string };
-          select?: Record<string, boolean>;
-        }) => {
+        async ({ data }: { data: { conversationId: string; role: string; content: string } }) => {
           const msg = {
-            id: `msg-${nextMessageId++}`,
+            id: `msg-${nextId++}`,
             conversationId: data.conversationId,
             role: data.role,
             content: data.content,
             createdAt: new Date().toISOString(),
           };
-          messages.set(msg.id, msg);
-          return {
-            ...(select?.id ? { id: msg.id } : {}),
-            ...(select?.conversationId ? { conversationId: msg.conversationId } : {}),
-            ...(select?.role ? { role: msg.role } : {}),
-            ...(select?.content ? { content: msg.content } : {}),
-            ...(select?.createdAt ? { createdAt: msg.createdAt } : {}),
-          };
+          createdMessages.push(msg);
+          return msg;
         },
       ),
       findMany: vi.fn(
-        async ({
-          where,
-          orderBy,
-          select,
-        }: {
-          where?: { conversationId?: string };
-          orderBy?: { createdAt?: string };
-          select?: Record<string, boolean>;
-        }) => {
-          return Array.from(messages.values())
-            .filter((msg) =>
-              where?.conversationId
-                ? msg.conversationId === where.conversationId
-                : true,
-            )
-            .sort((a, b) =>
-              orderBy?.createdAt === "asc"
-                ? a.createdAt.localeCompare(b.createdAt)
-                : b.createdAt.localeCompare(a.createdAt),
-            )
-            .map((msg) => ({
-              ...(select?.id ? { id: msg.id } : {}),
-              ...(select?.conversationId
-                ? { conversationId: msg.conversationId }
-                : {}),
-              ...(select?.role ? { role: msg.role } : {}),
-              ...(select?.content ? { content: msg.content } : {}),
-              ...(select?.createdAt ? { createdAt: msg.createdAt } : {}),
-            }));
-        },
+        async ({ where }: { where: { conversationId: string } }) =>
+          createdMessages.filter((m) => m.conversationId === where.conversationId),
       ),
     },
     toolCall: {
-      create: vi.fn(async () => ({})),
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        toolCallCreates.push(data);
+        return { id: `tc-${nextId++}`, ...data };
+      }),
     },
     checkpoint: {
       create: vi.fn(async () => ({})),
@@ -194,15 +96,13 @@ vi.mock("../../src/lib/prisma", () => ({
 
 describe("chat persistence", () => {
   beforeEach(() => {
-    users.clear();
-    conversations.clear();
-    messages.clear();
-    nextUserId = 1;
-    nextConversationId = 1;
-    nextMessageId = 1;
+    nextId = 1;
+    createdMessages.length = 0;
+    toolCallCreates.length = 0;
+    vi.clearAllMocks();
   });
 
-  it("stores the user message, assistant message, and tool call", async () => {
+  it("stores the user message and assistant message", async () => {
     const app = buildApp({
       provider: {
         stream: async () => ({ type: "final", content: "你好，我已经完成处理。" }),
@@ -253,4 +153,68 @@ describe("chat persistence", () => {
     }
   });
 
+  it("persists tool calls when the provider returns a tool-call response", async () => {
+    const app = buildApp({
+      provider: {
+        stream: async ({ messages }: { messages: Array<{ role: string }> }) => {
+          // If the messages contain a tool-role message, the tool was already
+          // executed — return the final answer.
+          if (messages.some((m) => m.role === "tool")) {
+            return { type: "final", content: "工具调用完成" };
+          }
+          return { type: "tool-call", toolName: "current-time", input: {} };
+        },
+      },
+      tools: {
+        "current-time": async () => ({ time: "2025-01-01T00:00:00Z" }),
+      },
+    });
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: { email: "tool@example.com", password: "password123" },
+      });
+
+      const session = register.cookies[0]?.value ?? "";
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/conversations",
+        cookies: { session },
+        payload: {},
+      });
+
+      const conversationId = created.json().conversation.id;
+
+      const streamed = await app.inject({
+        method: "POST",
+        url: "/chat/stream",
+        cookies: { session },
+        payload: { conversationId, message: "现在几点？" },
+      });
+
+      expect(streamed.statusCode).toBe(200);
+
+      // Assert tool call was persisted with correct arguments
+      expect(toolCallCreates).toHaveLength(1);
+      expect(toolCallCreates[0]).toMatchObject({
+        toolName: "current-time",
+        toolInput: {},
+        status: "completed",
+      });
+      // conversationId and messageId should be present
+      expect(toolCallCreates[0].conversationId).toBeDefined();
+      expect(toolCallCreates[0].messageId).toBeDefined();
+
+      // The final assistant message should also be persisted
+      expect(createdMessages).toHaveLength(2); // user + assistant
+      expect(createdMessages[0].role).toBe("user");
+      expect(createdMessages[1].role).toBe("assistant");
+      expect(createdMessages[1].content).toBe("工具调用完成");
+    } finally {
+      await app.close();
+    }
+  });
 });
