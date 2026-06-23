@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
+import { unauthorizedSchema } from "../auth/auth.schema";
 import {
   createConversation,
   listConversations,
@@ -8,14 +9,6 @@ import {
 type ConversationMessageParams = {
   id: string;
 };
-
-const unauthorizedSchema = {
-  type: "object",
-  required: ["message"],
-  properties: {
-    message: { type: "string" },
-  },
-} as const;
 
 const notFoundSchema = {
   type: "object",

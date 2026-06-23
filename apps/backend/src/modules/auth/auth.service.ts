@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma";
-import type { RegisterBody } from "./auth.schema";
+import type { LoginBody, RegisterBody } from "./auth.schema";
 
 type AuthUser = {
   id: string;
@@ -25,6 +25,35 @@ export async function registerUser({
       createdAt: true,
     },
   });
+}
+
+export async function loginUser({
+  emailOrUsername,
+  password,
+}: LoginBody): Promise<AuthUser | null> {
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: emailOrUsername }, { username: emailOrUsername }],
+    },
+    select: {
+      id: true,
+      email: true,
+      createdAt: true,
+      passwordHash: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+
+  if (!valid) {
+    return null;
+  }
+
+  return { id: user.id, email: user.email, createdAt: user.createdAt };
 }
 
 export async function getCurrentUser(userId: string): Promise<AuthUser | null> {

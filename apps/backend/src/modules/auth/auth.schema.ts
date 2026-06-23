@@ -8,6 +8,16 @@ export const registerBodySchema = {
   additionalProperties: false,
 } as const;
 
+export const loginBodySchema = {
+  type: "object",
+  required: ["emailOrUsername", "password"],
+  properties: {
+    emailOrUsername: { type: "string", minLength: 1 },
+    password: { type: "string", minLength: 1 },
+  },
+  additionalProperties: false,
+} as const;
+
 const userSchema = {
   type: "object",
   required: ["id", "email", "createdAt"],
@@ -39,5 +49,10 @@ export const unauthorizedSchema = {
 
 export type RegisterBody = {
   email: string;
+  password: string;
+};
+
+export type LoginBody = {
+  emailOrUsername: string;
   password: string;
 };

@@ -2,9 +2,6 @@
   "name": "chat-agent",
   "private": true,
   "packageManager": "pnpm@10.0.0",
-  "dependencies": {
-    "@prisma/client": "^6.19.3"
-  },
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:backend": "pnpm --filter backend dev",

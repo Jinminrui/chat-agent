@@ -6,6 +6,8 @@ function createMockPrisma() {
     checkpoint: {
       create: vi.fn().mockResolvedValue({ id: "cp-1" }),
       findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
   };
 }
@@ -66,5 +68,43 @@ describe("CheckpointService", () => {
 
     const checkpoint = await service.load("conv-empty");
     expect(checkpoint).toBeNull();
+  });
+
+  it("deletes all checkpoints except the latest N", async () => {
+    const keepIds = ["cp-3", "cp-2"];
+    mockPrisma.checkpoint.findMany.mockResolvedValue(
+      keepIds.map((id) => ({ id })),
+    );
+
+    const service = createCheckpointService({
+      prisma: mockPrisma as never,
+    });
+
+    await service.cleanup("conv-1", 2);
+
+    expect(mockPrisma.checkpoint.findMany).toHaveBeenCalledWith({
+      where: { conversationId: "conv-1" },
+      orderBy: { messageIndex: "desc" },
+      take: 2,
+      select: { id: true },
+    });
+    expect(mockPrisma.checkpoint.deleteMany).toHaveBeenCalledWith({
+      where: {
+        conversationId: "conv-1",
+        id: { notIn: keepIds },
+      },
+    });
+  });
+
+  it("skips deletion when no checkpoints exist", async () => {
+    mockPrisma.checkpoint.findMany.mockResolvedValue([]);
+
+    const service = createCheckpointService({
+      prisma: mockPrisma as never,
+    });
+
+    await service.cleanup("conv-empty", 5);
+
+    expect(mockPrisma.checkpoint.deleteMany).not.toHaveBeenCalled();
   });
 });

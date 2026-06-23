@@ -57,6 +57,35 @@ vi.mock("../../src/lib/prisma", () => ({
           ...(select?.createdAt ? { createdAt: user.createdAt } : {}),
         };
       }),
+      findFirst: vi.fn(
+        async ({
+          where,
+          select,
+        }: {
+          where: { OR: Array<Record<string, string>> };
+          select?: Record<string, boolean>;
+        }) => {
+          const found = Array.from(users.values()).find((u) =>
+            where.OR.some(
+              (condition: Record<string, string>) =>
+                condition.email === u.email || condition.username === u.email,
+            ),
+          );
+
+          if (!found) {
+            return null;
+          }
+
+          return {
+            ...(select?.id ? { id: found.id } : {}),
+            ...(select?.email ? { email: found.email } : {}),
+            ...(select?.createdAt ? { createdAt: found.createdAt } : {}),
+            ...(select?.passwordHash
+              ? { passwordHash: found.passwordHash }
+              : {}),
+          };
+        },
+      ),
     },
   },
 }));

@@ -1,5 +1,5 @@
 export type ProviderResult =
-  | { type: "tool-call"; toolName: string; input: unknown }
+  | { type: "tool-call"; toolName: string; input: Record<string, unknown> }
   | { type: "final"; content: string };
 
 export type ChatProvider = {

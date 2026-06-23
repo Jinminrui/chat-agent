@@ -18,6 +18,7 @@ export type CheckpointService = {
     state: CheckpointState;
     createdAt: Date;
   } | null>;
+  cleanup(conversationId: string, keepLatest: number): Promise<void>;
 };
 
 export function createCheckpointService(deps: {
@@ -38,6 +39,28 @@ export function createCheckpointService(deps: {
       return deps.prisma.checkpoint.findFirst({
         where: { conversationId },
         orderBy: { messageIndex: "desc" },
+      });
+    },
+
+    async cleanup(conversationId, keepLatest) {
+      const latest = await deps.prisma.checkpoint.findMany({
+        where: { conversationId },
+        orderBy: { messageIndex: "desc" },
+        take: keepLatest,
+        select: { id: true },
+      });
+
+      const keepIds = latest.map((cp) => cp.id);
+
+      if (keepIds.length === 0) {
+        return;
+      }
+
+      await deps.prisma.checkpoint.deleteMany({
+        where: {
+          conversationId,
+          id: { notIn: keepIds },
+        },
       });
     },
   };
