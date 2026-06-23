@@ -35,7 +35,7 @@ export function Composer({ onSubmit, disabled }: ComposerProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="min-h-[44px] max-h-[200px] resize-none"
+          className="min-h-[48px] max-h-[200px] resize-none"
           disabled={disabled}
         />
         <Button
