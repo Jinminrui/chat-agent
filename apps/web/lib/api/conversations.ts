@@ -4,6 +4,7 @@ import { apiRequest } from "./client";
 export async function createConversation(): Promise<Conversation> {
   return apiRequest<Conversation>("/conversations", {
     method: "POST",
+    body: JSON.stringify({}),
   });
 }
 

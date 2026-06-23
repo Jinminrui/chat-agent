@@ -22,6 +22,7 @@ export async function register(params: {
 export async function logout(): Promise<void> {
   return apiRequest<void>("/auth/logout", {
     method: "POST",
+    body: JSON.stringify({}),
   });
 }
 
