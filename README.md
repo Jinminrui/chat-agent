@@ -68,6 +68,33 @@ pnpm --filter web test
 - SSE 流式聊天回复
 - 内置工具注册与最小 agent runtime（web_search、fetch_url、current_time）
 - 前后端共享类型契约
+- 统一日志系统（请求追踪、错误记录、业务操作日志）
+
+## 日志系统
+
+后端使用 Pino 作为日志库，支持以下特性：
+
+- **请求追踪**：每个请求自动生成唯一 requestId
+- **日志级别**：error, warn, info
+- **输出格式**：JSON（生产环境）、美化文本（开发环境）
+
+### 环境变量
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `LOG_LEVEL` | `info` | 日志级别（error/warn/info） |
+
+### 开发环境
+
+```bash
+pnpm dev:backend  # 自动使用 pino-pretty 美化输出
+```
+
+### 生产环境
+
+```bash
+LOG_LEVEL=warn pnpm start  # JSON 格式输出
+```
 
 ## API 接口
 
