@@ -1,4 +1,4 @@
-import { type ApiResponse, isSuccess, ApiError } from '@/types/api';
+import { type ApiResponse, isSuccess } from '@/types/api';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 

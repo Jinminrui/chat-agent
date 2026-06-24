@@ -214,4 +214,41 @@ describe("auth routes", () => {
       await app.close();
     }
   });
+
+  it("destroys the session on logout", async () => {
+    const app = buildApp();
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: {
+          username: "logout-user",
+          email: "logout@example.com",
+          password: "password123",
+        },
+      });
+
+      const session = register.cookies[0]?.value ?? "";
+
+      const logout = await app.inject({
+        method: "POST",
+        url: "/api/auth/logout",
+        cookies: { session },
+      });
+
+      expect(logout.statusCode).toBe(204);
+
+      const me = await app.inject({
+        method: "GET",
+        url: "/api/auth/me",
+        cookies: { session },
+      });
+
+      expect(me.statusCode).toBe(401);
+      expect(me.json().code).toBe(2001);
+    } finally {
+      await app.close();
+    }
+  });
 });

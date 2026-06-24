@@ -22,7 +22,7 @@ export function RegisterForm() {
 
     try {
       await register({ username, email, password });
-      router.push("/login");
+      router.push("/chat");
     } catch (err) {
       setError(err instanceof Error ? err.message : "注册失败");
     } finally {

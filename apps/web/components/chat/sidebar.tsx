@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { MessageSquare, Plus, LogOut, Settings } from "lucide-react";
 import type { Conversation } from "@chat-agent/shared";
+import { logout } from "@/lib/api/auth";
 import { listConversations, createConversation } from "@/lib/api/conversations";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +32,6 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_BASE_URL) return;
     listConversations().then((items) => setConversations(items));
   }, []);
 
@@ -39,6 +39,12 @@ export function AppSidebar() {
     const conv = await createConversation();
     setConversations((prev) => [conv, ...prev]);
     router.push(`/chat/${conv.id}`);
+  }, [router]);
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    setConversations([]);
+    router.replace("/login");
   }, [router]);
 
   const isActive = (convId: string) => pathname === `/chat/${convId}`;
@@ -104,7 +110,7 @@ export function AppSidebar() {
               <Settings className="mr-2 h-4 w-4" />
               个人设置
             </DropdownMenuItem>
-            <DropdownMenuItem className="rounded-lg">
+            <DropdownMenuItem className="rounded-lg" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               退出登录
             </DropdownMenuItem>

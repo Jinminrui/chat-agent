@@ -1,18 +1,11 @@
-export type ChatMessage = {
-  id: string;
-  conversationId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  createdAt: string;
-};
+import type {
+  Conversation as SharedConversation,
+  Message as SharedMessage,
+} from "@chat-agent/shared";
 
-export type Conversation = {
-  id: string;
-  userId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-};
+export type ChatMessage = SharedMessage;
+
+export type Conversation = SharedConversation;
 
 export type SendMessageRequest = {
   conversationId: string;

@@ -8,11 +8,77 @@
 
 import OpenAI from "openai";
 import type { FastifyBaseLogger } from "fastify";
-import type { ChatProvider } from "./provider.types";
+import type {
+  ChatProvider,
+  ProviderMessage,
+  ProviderToolDefinition,
+} from "./provider.types";
 
 type CreateOpenAIProviderOptions = {
   logger?: FastifyBaseLogger;
 };
+
+function parseToolInput(argumentsText: string | undefined) {
+  if (!argumentsText) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(argumentsText);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function toOpenAITools(tools: ProviderToolDefinition[] = []) {
+  return tools.map((tool) => ({
+    type: "function" as const,
+    function: {
+      name: tool.name,
+      description: `Server tool: ${tool.name}`,
+      parameters: {
+        type: "object",
+        properties: {},
+        additionalProperties: true,
+      },
+    },
+  }));
+}
+
+function toOpenAIMessages(messages: ProviderMessage[]) {
+  return messages.map((message) => {
+    if (message.role === "assistant" && message.toolName && message.toolCallId) {
+      return {
+        role: "assistant" as const,
+        content: message.content || "",
+        tool_calls: [
+          {
+            id: message.toolCallId,
+            type: "function" as const,
+            function: {
+              name: message.toolName,
+              arguments: JSON.stringify(message.toolInput ?? {}),
+            },
+          },
+        ],
+      };
+    }
+
+    if (message.role === "tool") {
+      return {
+        role: "tool" as const,
+        tool_call_id: message.toolCallId ?? message.toolName ?? "tool-call",
+        content: message.content,
+      };
+    }
+
+    return {
+      role: message.role as "user" | "assistant",
+      content: message.content,
+    };
+  });
+}
 
 export function createOpenAIProvider(
   options: CreateOpenAIProviderOptions = {},
@@ -28,6 +94,37 @@ export function createOpenAIProvider(
     return {
       async stream(input) {
         const lastMessage = input.messages[input.messages.length - 1];
+        const availableTools = new Set(input.tools?.map((tool) => tool.name));
+
+        if (
+          lastMessage?.role === "user" &&
+          availableTools.has("current-time") &&
+          /(几点|时间|time)/i.test(lastMessage.content)
+        ) {
+          return {
+            type: "tool-call",
+            toolName: "current-time",
+            input: {},
+            toolCallId: "mock-current-time-call",
+          };
+        }
+
+        if (lastMessage?.role === "tool" && lastMessage.toolName === "current-time") {
+          const output = parseToolInput(lastMessage.content);
+          const iso =
+            output &&
+            typeof output === "object" &&
+            "iso" in output &&
+            typeof output.iso === "string"
+              ? output.iso
+              : null;
+
+          return {
+            type: "final",
+            content: iso ? `当前时间是 ${iso}` : lastMessage.content,
+          };
+        }
+
         return {
           type: "final",
           content: lastMessage?.content ?? "",
@@ -44,21 +141,30 @@ export function createOpenAIProvider(
   return {
     async stream(input) {
       const start = Date.now();
-
-      // 转换消息格式
-      const messages = input.messages.map((msg) => ({
-        role: msg.role as "user" | "assistant" | "system",
-        content: msg.content,
-      }));
+      const messages = toOpenAIMessages(input.messages);
+      const tools = toOpenAITools(input.tools);
 
       try {
         const response = await client.chat.completions.create({
           model,
           messages,
+          ...(tools.length > 0 ? { tools, tool_choice: "auto" as const } : {}),
           stream: false,
         });
 
-        const content = response.choices[0]?.message?.content || "";
+        const message = response.choices[0]?.message;
+        const toolCall = message?.tool_calls?.[0];
+
+        if (toolCall?.type === "function") {
+          return {
+            type: "tool-call",
+            toolName: toolCall.function.name,
+            input: parseToolInput(toolCall.function.arguments),
+            toolCallId: toolCall.id,
+          };
+        }
+
+        const content = message?.content || "";
 
         // 记录 LLM 调用日志
         if (logger) {

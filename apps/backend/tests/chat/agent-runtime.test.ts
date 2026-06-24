@@ -9,7 +9,7 @@ describe("agent runtime", () => {
         .fn()
         .mockResolvedValueOnce({
           type: "tool-call",
-          toolName: "current_time",
+          toolName: "current-time",
           input: {},
         })
         .mockResolvedValueOnce({
@@ -21,7 +21,7 @@ describe("agent runtime", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 3,
     });
@@ -39,7 +39,7 @@ describe("agent runtime", () => {
       expect.arrayContaining([
         expect.objectContaining({
           role: "tool",
-          toolName: "current_time",
+          toolName: "current-time",
           content: JSON.stringify({ iso: "2026-06-23T10:00:00.000Z" }),
         }),
       ]),
@@ -50,7 +50,7 @@ describe("agent runtime", () => {
     const provider = {
       stream: vi.fn().mockResolvedValue({
         type: "tool-call",
-        toolName: "current_time",
+        toolName: "current-time",
         input: {},
       }),
     };
@@ -58,7 +58,7 @@ describe("agent runtime", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 1,
     });
@@ -76,10 +76,10 @@ describe("agent runtime", () => {
 
   it("only treats own properties as registered tools", () => {
     const registry = createToolRegistry({
-      current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+      "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
     });
 
-    expect(registry.has("current_time")).toBe(true);
+    expect(registry.has("current-time")).toBe(true);
     expect(registry.has("toString")).toBe(false);
     expect(registry.has("constructor")).toBe(false);
   });
@@ -100,12 +100,12 @@ describe("agent runtime with checkpoints", () => {
         .fn()
         .mockResolvedValueOnce({
           type: "tool-call",
-          toolName: "current_time",
+          toolName: "current-time",
           input: {},
         })
         .mockResolvedValueOnce({
           type: "tool-call",
-          toolName: "current_time",
+          toolName: "current-time",
           input: {},
         })
         .mockResolvedValueOnce({
@@ -117,7 +117,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -150,7 +150,7 @@ describe("agent runtime with checkpoints", () => {
         .fn()
         .mockResolvedValueOnce({
           type: "tool-call",
-          toolName: "current_time",
+          toolName: "current-time",
           input: {},
         })
         .mockResolvedValueOnce({
@@ -162,7 +162,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -181,7 +181,7 @@ describe("agent runtime with checkpoints", () => {
         .fn()
         .mockResolvedValueOnce({
           type: "tool-call",
-          toolName: "current_time",
+          toolName: "current-time",
           input: {},
         })
         .mockResolvedValueOnce({
@@ -193,7 +193,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 5,
     });
@@ -215,10 +215,10 @@ describe("agent runtime with checkpoints", () => {
       state: {
         messages: [
           { role: "user", content: "hi" },
-          { role: "assistant", content: "", toolName: "current_time" },
+          { role: "assistant", content: "", toolName: "current-time" },
           {
             role: "tool",
-            toolName: "current_time",
+            toolName: "current-time",
             content: JSON.stringify({ iso: "2026-06-23T10:00:00.000Z" }),
           },
         ],
@@ -236,7 +236,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -250,16 +250,17 @@ describe("agent runtime with checkpoints", () => {
     expect(checkpointService.load).toHaveBeenCalledWith("conv-1");
     expect(result.content).toBe("现在是 10:00。");
 
-    // Provider should be called with checkpoint messages, not original
+    // Provider should be called with checkpoint messages plus the new input.
     const providerCall = vi.mocked(provider.stream).mock.calls[0]?.[0];
     expect(providerCall?.messages).toEqual([
       { role: "user", content: "hi" },
-      { role: "assistant", content: "", toolName: "current_time" },
+      { role: "assistant", content: "", toolName: "current-time" },
       {
         role: "tool",
-        toolName: "current_time",
+        toolName: "current-time",
         content: JSON.stringify({ iso: "2026-06-23T10:00:00.000Z" }),
       },
+      { role: "user", content: "original message" },
     ]);
   });
 
@@ -277,7 +278,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        current_time: async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
       },
       maxToolCalls: 5,
       checkpointService,

@@ -22,17 +22,21 @@ export function Composer({ onSubmit, disabled }: ComposerProps) {
     }
   }, [value]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submitMessage() {
     if (!value.trim()) return;
     onSubmit(value);
     setValue("");
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitMessage();
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      submitMessage();
     }
   }
 
@@ -52,10 +56,11 @@ export function Composer({ onSubmit, disabled }: ComposerProps) {
             disabled={disabled}
           />
           <Button
-            type="submit"
+            type="button"
             size="icon"
             disabled={!canSend}
             aria-label="发送"
+            onClick={submitMessage}
             className={cn(
               "h-8 w-8 shrink-0 rounded-xl transition-all",
               canSend

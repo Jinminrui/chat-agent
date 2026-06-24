@@ -3,12 +3,21 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, usePathname, useRouter } from "next/navigation";
 import type { Message } from "@chat-agent/shared";
+import { getMe } from "@/lib/api/auth";
 import { listMessages } from "@/lib/api/conversations";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/chat/sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { Composer } from "@/components/chat/composer";
 import { useChatStream } from "@/features/chat/use-chat-stream";
+
+function createLocalMessageId() {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export default function ConversationPage() {
   const params = useParams();
@@ -17,7 +26,27 @@ export default function ConversationPage() {
   const router = useRouter();
   const conversationId = params.conversationId as string;
   const [messages, setMessages] = useState<Message[]>([]);
+  const [authReady, setAuthReady] = useState(false);
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
   const autoMessageSentRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getMe()
+      .then(() => {
+        if (active) {
+          setAuthReady(true);
+        }
+      })
+      .catch(() => {
+        router.replace("/login");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleStreamComplete = useCallback(
     (response: string) => {
@@ -25,7 +54,7 @@ export default function ConversationPage() {
         setMessages((prev) => [
           ...prev,
           {
-            id: crypto.randomUUID(),
+            id: createLocalMessageId(),
             conversationId,
             role: "assistant",
             content: response,
@@ -40,15 +69,36 @@ export default function ConversationPage() {
   const { streaming, delta, send } = useChatStream({ onComplete: handleStreamComplete });
 
   useEffect(() => {
-    listMessages(conversationId).then((items) => setMessages(items));
-  }, [conversationId]);
+    if (!authReady) {
+      return;
+    }
+
+    let active = true;
+
+    listMessages(conversationId)
+      .then((items) => {
+        if (active) {
+          setMessages(items);
+          setMessagesLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          router.replace("/login");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authReady, conversationId]);
 
   const handleSend = useCallback(
     (message: string) => {
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: createLocalMessageId(),
           conversationId,
           role: "user",
           content: message,
@@ -61,6 +111,8 @@ export default function ConversationPage() {
   );
 
   useEffect(() => {
+    if (!authReady || !messagesLoaded) return;
+
     const message = searchParams.get("message");
     if (!message || autoMessageSentRef.current) return;
 
@@ -68,6 +120,10 @@ export default function ConversationPage() {
     router.replace(pathname, { scroll: false });
     handleSend(message);
   }, [searchParams, pathname, router, handleSend]);
+
+  if (!authReady || !messagesLoaded) {
+    return null;
+  }
 
   return (
     <SidebarProvider>

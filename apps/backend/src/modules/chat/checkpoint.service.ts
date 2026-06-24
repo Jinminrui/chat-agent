@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import type { RuntimeMessage } from "./agent-runtime";
 
 type CheckpointState = {
@@ -30,7 +30,7 @@ export function createCheckpointService(deps: {
         data: {
           conversationId,
           messageIndex,
-          state: { messages } satisfies CheckpointState,
+          state: ({ messages } satisfies CheckpointState) as Prisma.InputJsonValue,
         },
       });
     },

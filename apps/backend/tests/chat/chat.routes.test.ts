@@ -155,8 +155,61 @@ vi.mock("../../src/lib/prisma", () => ({
           };
         },
       ),
+      update: vi.fn(
+        async ({
+          where,
+          data,
+        }: {
+          where: { id: string };
+          data: { title?: string };
+        }) => {
+          const conversation = conversations.get(where.id);
+
+          if (!conversation) {
+            throw new Error("conversation not found");
+          }
+
+          const updated = {
+            ...conversation,
+            ...(data.title ? { title: data.title } : {}),
+            updatedAt: new Date().toISOString(),
+          };
+
+          conversations.set(where.id, updated);
+          return updated;
+        },
+      ),
     },
     message: {
+      findMany: vi.fn(
+        async ({
+          where,
+          orderBy,
+          select,
+        }: {
+          where: { conversationId: string };
+          orderBy?: { createdAt: "asc" | "desc" };
+          select?: Record<string, boolean>;
+        }) => {
+          const filtered = Array.from(messages.values())
+            .filter((msg) => msg.conversationId === where.conversationId)
+            .sort((a, b) =>
+              orderBy?.createdAt === "desc"
+                ? b.createdAt.localeCompare(a.createdAt)
+                : a.createdAt.localeCompare(b.createdAt),
+            );
+
+          return filtered.map((msg) => ({
+            ...(select?.id ? { id: msg.id } : {}),
+            ...(select?.conversationId
+              ? { conversationId: msg.conversationId }
+              : {}),
+            ...(select?.role ? { role: msg.role } : {}),
+            ...(select?.content ? { content: msg.content } : {}),
+            ...(select?.createdAt ? { createdAt: msg.createdAt } : {}),
+          }));
+        },
+      ),
       create: vi.fn(
         async ({
           data,
@@ -338,6 +391,47 @@ describe("chat stream route", () => {
     }
   });
 
+  it("updates the default conversation title from the first user message", async () => {
+    const app = buildApp({
+      provider: {
+        stream: async () => ({ type: "final", content: "已记录标题" }),
+      },
+    });
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: { username: "title", email: "title@example.com", password: "password123" },
+      });
+      const session = register.cookies[0]?.value ?? "";
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/conversations",
+        cookies: { session },
+        payload: {},
+      });
+      const conversationId = created.json().data.conversation.id;
+
+      await app.inject({
+        method: "POST",
+        url: "/api/chat/stream",
+        cookies: { session },
+        payload: {
+          conversationId,
+          message: "  这是 第一条 会话消息，用来生成标题并截断长度  ",
+        },
+      });
+
+      expect(conversations.get(conversationId)?.title).toBe(
+        "这是 第一条 会话消息，用来生成标题并截断长度",
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
   it("returns 401 when not authenticated", async () => {
     const app = buildApp({
       provider: {
@@ -456,6 +550,121 @@ describe("chat stream route", () => {
       );
       expect(assistantMsgs).toHaveLength(1);
       expect(assistantMsgs[0]?.content).toBe("回复内容");
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("loads existing conversation history before running the agent", async () => {
+    const provider = {
+      stream: vi.fn().mockResolvedValue({ type: "final", content: "新的回复" }),
+    };
+    const app = buildApp({ provider });
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: { username: "history", email: "history@example.com", password: "password123" },
+      });
+      const session = register.cookies[0]?.value ?? "";
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/conversations",
+        cookies: { session },
+        payload: {},
+      });
+      const conversationId = created.json().data.conversation.id;
+
+      messages.set("msg-seed-1", {
+        id: "msg-seed-1",
+        conversationId,
+        role: "user",
+        content: "第一条消息",
+        createdAt: "2026-06-23T10:00:00.000Z",
+      });
+      messages.set("msg-seed-2", {
+        id: "msg-seed-2",
+        conversationId,
+        role: "assistant",
+        content: "第一条回复",
+        createdAt: "2026-06-23T10:00:01.000Z",
+      });
+
+      await app.inject({
+        method: "POST",
+        url: "/api/chat/stream",
+        cookies: { session },
+        payload: {
+          conversationId,
+          message: "第二条消息",
+        },
+      });
+
+      expect(provider.stream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [
+            { role: "user", content: "第一条消息" },
+            { role: "assistant", content: "第一条回复" },
+            { role: "user", content: "第二条消息" },
+          ],
+        }),
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns an SSE error event when execution fails after the stream starts", async () => {
+    const app = buildApp({
+      provider: {
+        stream: async () => {
+          throw new Error("provider exploded");
+        },
+      },
+    });
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: { username: "broken", email: "broken@example.com", password: "password123" },
+      });
+      const session = register.cookies[0]?.value ?? "";
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/conversations",
+        cookies: { session },
+        payload: {},
+      });
+      const conversationId = created.json().data.conversation.id;
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/chat/stream",
+        cookies: { session },
+        payload: {
+          conversationId,
+          message: "触发错误",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers["content-type"]).toContain("text/event-stream");
+
+      const events = parseSseEvents(response.body);
+      expect(events).toEqual([
+        {
+          event: "error",
+          id: 1,
+          data: {
+            code: 2020,
+            msg: "provider exploded",
+          },
+        },
+      ]);
     } finally {
       await app.close();
     }

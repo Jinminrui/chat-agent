@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import type { FastifyBaseLogger } from "fastify";
 
 const globalForPrisma = globalThis as { prisma?: PrismaClient };
@@ -7,6 +7,7 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: [
+      { level: 'query', emit: 'event' },
       { level: 'warn', emit: 'event' },
       { level: 'error', emit: 'event' },
     ],
@@ -24,7 +25,7 @@ const SLOW_QUERY_MS = process.env.NODE_ENV === 'production' ? 100 : 0;
  * 需要在 app 启动后调用，注入 logger
  */
 export function setupPrismaLogging(logger: FastifyBaseLogger) {
-  prisma.$on('query', (e) => {
+  prisma.$on('query' as never, (e: Prisma.QueryEvent) => {
     if (e.duration >= SLOW_QUERY_MS) {
       logger.info({
         type: 'db.query',

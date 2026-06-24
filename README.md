@@ -34,7 +34,7 @@ pnpm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入 DATABASE_URL 和 SESSION_SECRET
+# 编辑 .env，至少填入 DATABASE_URL、SESSION_SECRET、NEXT_PUBLIC_API_BASE_URL
 
 # 数据库迁移
 pnpm --filter backend exec prisma migrate dev
@@ -46,19 +46,26 @@ pnpm dev:backend
 pnpm dev:web
 ```
 
-访问 http://localhost:3000 即可使用。
+默认访问：
+
+- 前端: http://localhost:3000
+- 后端: http://localhost:3001
+
+如果未配置 `LLM_API_KEY`，后端会启用本地 mock provider，仍可验证基础聊天和工具调用链路。
 
 ## 测试
 
 ```bash
-# 运行所有测试
+# 根级验证入口
+pnpm lint
 pnpm test
 
-# 仅运行后端测试
-pnpm --filter backend test
-
-# 仅运行前端测试
-pnpm --filter web test
+# 分应用验证
+pnpm lint:backend
+pnpm lint:web
+pnpm test:shared
+pnpm test:backend
+pnpm test:web
 ```
 
 ## 核心功能
@@ -66,7 +73,7 @@ pnpm --filter web test
 - 账号密码注册、登录、登出
 - 个人会话列表与消息历史
 - SSE 流式聊天回复
-- 内置工具注册与最小 agent runtime（web_search、fetch_url、current_time）
+- 内置工具注册与最小 agent runtime（`web-search`、`fetch-url`、`current-time`）
 - 前后端共享类型契约
 - 统一日志系统（请求追踪、错误记录、业务操作日志）
 
@@ -78,11 +85,20 @@ pnpm --filter web test
 - **日志级别**：error, warn, info
 - **输出格式**：JSON（生产环境）、美化文本（开发环境）
 
-### 环境变量
+## 环境变量
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
+| `DATABASE_URL` | - | PostgreSQL 连接串 |
+| `SESSION_SECRET` | `dev-session-secret-with-32-characters` | Session 密钥，生产环境必须覆盖 |
+| `PORT` | `3001` | 后端监听端口 |
+| `HOST` | `0.0.0.0` | 后端监听地址 |
+| `WEB_ORIGIN` | `http://localhost:3000` | 允许的前端来源，支持逗号分隔 |
 | `LOG_LEVEL` | `info` | 日志级别（error/warn/info） |
+| `LLM_BASE_URL` | `https://api.openai.com/v1` | OpenAI 兼容接口地址 |
+| `LLM_API_KEY` | - | 模型调用密钥；未设置时走 mock provider |
+| `LLM_MODEL` | `gpt-3.5-turbo` | 默认模型名 |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:3001` | 前端请求后端的基础地址 |
 
 ### 开发环境
 
@@ -100,17 +116,17 @@ LOG_LEVEL=warn pnpm start  # JSON 格式输出
 
 ### 认证
 
-- `POST /auth/register` — 注册
-- `POST /auth/login` — 登录
-- `POST /auth/logout` — 登出
-- `GET /auth/me` — 当前用户信息
+- `POST /api/auth/register` — 注册
+- `POST /api/auth/login` — 登录
+- `POST /api/auth/logout` — 登出
+- `GET /api/auth/me` — 当前用户信息
 
 ### 会话
 
-- `GET /conversations` — 会话列表
-- `POST /conversations` — 创建会话
-- `GET /conversations/:id/messages` — 会话消息历史
+- `GET /api/conversations` — 会话列表
+- `POST /api/conversations` — 创建会话
+- `GET /api/conversations/:id/messages` — 会话消息历史
 
 ### 聊天
 
-- `POST /chat/stream` — SSE 流式聊天
+- `POST /api/chat/stream` — SSE 流式聊天

@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply } from 'fastify';
 
 export class SSEWriter {
   private id = 0;
@@ -44,7 +44,12 @@ export class SSEWriter {
   }
 
   error(code: number, msg: string, details?: unknown) {
-    this.write('error', { code, msg, ...details });
+    this.write(
+      'error',
+      details && typeof details === 'object'
+        ? { code, msg, ...details }
+        : { code, msg },
+    );
     this.cleanup();
   }
 

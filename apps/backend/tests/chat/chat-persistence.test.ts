@@ -59,6 +59,13 @@ vi.mock("../../src/lib/prisma", () => ({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })),
+      update: vi.fn(async ({ where, data }: { where: { id: string }; data: { title?: string } }) => ({
+        id: where.id,
+        userId: "user-1",
+        title: data.title ?? "Test",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
     },
     message: {
       create: vi.fn(

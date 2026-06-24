@@ -5,8 +5,14 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:backend": "pnpm --filter backend dev",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint"
+    "test:web": "pnpm --filter web test",
+    "test:backend": "pnpm --filter backend test",
+    "test:shared": "pnpm --filter @chat-agent/shared test",
+    "test": "pnpm test:shared && pnpm test:backend && pnpm test:web",
+    "lint:web": "pnpm --filter web lint",
+    "lint:backend": "pnpm --filter backend lint",
+    "lint:shared": "pnpm --filter @chat-agent/shared lint",
+    "lint": "pnpm lint:shared && pnpm lint:backend && pnpm lint:web"
   },
   "devDependencies": {
     "@prisma/client": "^6.19.3",

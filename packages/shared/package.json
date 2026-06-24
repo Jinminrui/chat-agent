@@ -6,7 +6,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "echo \"lint not configured yet\"",
+    "lint": "vitest run --root ../.. packages/shared/tests/contracts.test.ts",
     "test": "vitest run --root ../.."
   },
   "devDependencies": {

@@ -11,15 +11,20 @@ describe("shared contracts", () => {
 
     const conversation: Conversation = {
       id: "conv_1",
+      userId: "user_1",
       title: "Hello",
       createdAt: "2026-06-23T00:00:00.000Z",
       updatedAt: "2026-06-23T00:00:00.000Z",
     };
 
-    const event: ChatStreamEvent = { type: "assistant.delta", delta: "Hi" };
+    const event: ChatStreamEvent = {
+      event: "delta",
+      id: 1,
+      data: { content: "Hi" },
+    };
 
     expect(user.email).toBe("demo@example.com");
     expect(conversation.title).toBe("Hello");
-    expect(event.type).toBe("assistant.delta");
+    expect(event.event).toBe("delta");
   });
 });

@@ -56,12 +56,22 @@ export function buildApp(options: BuildAppOptions = {}) {
 
   // 全局错误处理器
   app.setErrorHandler((error, request, reply) => {
+    const statusCode =
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+        ? error.statusCode
+        : 500;
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
+
     request.log.error({
       err: error,
-      statusCode: error.statusCode || 500,
-    }, error.message);
+      statusCode,
+    }, message);
 
-    reply.code(error.statusCode || 500).send({ message: 'Internal Server Error' });
+    reply.code(statusCode).send({ message: 'Internal Server Error' });
   });
 
   return app;

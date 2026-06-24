@@ -1,9 +1,6 @@
-export type User = {
-  id: string;
-  email: string;
-  username: string;
-  createdAt: string;
-};
+import type { User } from "@chat-agent/shared";
+
+export type { User };
 
 export type LoginRequest = {
   emailOrUsername: string;

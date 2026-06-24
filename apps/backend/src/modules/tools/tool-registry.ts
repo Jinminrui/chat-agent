@@ -17,6 +17,9 @@ export function createToolRegistry(tools: ToolMap) {
     has(toolName: string) {
       return hasOwnTool(tools, toolName);
     },
+    names() {
+      return Object.keys(tools);
+    },
     async run(toolName: string, input: ToolInput) {
       const tool = hasOwnTool(tools, toolName) ? tools[toolName] : undefined;
 

@@ -4,13 +4,13 @@ import {
   type ToolMap,
   type ToolOutput,
 } from "../tools/tool-registry";
+import type {
+  ProviderMessage,
+  ProviderToolDefinition,
+} from "../providers/provider.types";
 import type { CheckpointService } from "./checkpoint.service";
 
-export type RuntimeMessage = {
-  role: "user" | "assistant" | "tool";
-  content: string;
-  toolName?: string;
-};
+export type RuntimeMessage = ProviderMessage;
 
 type FinalProviderResponse = {
   type: "final";
@@ -21,12 +21,16 @@ type ToolCallProviderResponse = {
   type: "tool-call";
   toolName: string;
   input: ToolInput;
+  toolCallId?: string;
 };
 
 type ProviderResponse = FinalProviderResponse | ToolCallProviderResponse;
 
 type RuntimeProvider = {
-  stream(input: { messages: RuntimeMessage[] }): Promise<ProviderResponse>;
+  stream(input: {
+    messages: RuntimeMessage[];
+    tools: ProviderToolDefinition[];
+  }): Promise<ProviderResponse>;
 };
 
 type RuntimeToolCall = {
@@ -64,6 +68,22 @@ type RunResult = {
   toolCalls: RuntimeToolCall[];
 };
 
+function getCheckpointVisibleMessageCount(messages: RuntimeMessage[]) {
+  return messages.filter(
+    (message) =>
+      message.role === "user" ||
+      (message.role === "assistant" && message.toolName === undefined),
+  ).length;
+}
+
+function getCheckpointVisibleMessages(messages: RuntimeMessage[]) {
+  return messages.filter(
+    (message) =>
+      message.role === "user" ||
+      (message.role === "assistant" && message.toolName === undefined),
+  );
+}
+
 function createMaxToolCallsExceededError() {
   const error = new Error("MAX_TOOL_CALLS_EXCEEDED");
   error.name = "MAX_TOOL_CALLS_EXCEEDED";
@@ -79,10 +99,12 @@ function serializeToolOutput(output: ToolOutput) {
 
 export function createAgentRuntime(config: CreateAgentRuntimeInput) {
   const registry = createToolRegistry(config.tools);
+  const toolDefinitions = registry.names().map((name) => ({ name }));
 
   return {
     async run(input: RunInput): Promise<RunResult> {
-      const messages = [...input.messages];
+      const inputMessages = [...input.messages];
+      const messages = [...inputMessages];
       const toolCalls: RuntimeToolCall[] = [];
       const { conversationId, checkpointService } = {
         conversationId: input.conversationId,
@@ -94,13 +116,33 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
         const checkpoint = await checkpointService.load(conversationId);
         if (checkpoint) {
           const state = checkpoint.state as { messages: RuntimeMessage[] };
-          messages.splice(0, messages.length, ...state.messages);
-          // toolCalls will be rebuilt from the provider loop
+          const visibleMessages = getCheckpointVisibleMessages(state.messages);
+          const visibleMessageCount = getCheckpointVisibleMessageCount(
+            state.messages,
+          );
+          const hasVisiblePrefix = visibleMessages.every(
+            (message, index) =>
+              inputMessages[index]?.role === message.role &&
+              inputMessages[index]?.content === message.content,
+          );
+          const pendingMessages = hasVisiblePrefix
+            ? inputMessages.slice(visibleMessageCount)
+            : inputMessages;
+
+          messages.splice(
+            0,
+            messages.length,
+            ...state.messages,
+            ...pendingMessages,
+          );
         }
       }
 
       while (true) {
-        const response = await config.provider.stream({ messages });
+        const response = await config.provider.stream({
+          messages,
+          tools: toolDefinitions,
+        });
 
         if (response.type === "final") {
           return {
@@ -131,14 +173,20 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
           output,
         });
 
+        const toolCallId =
+          response.toolCallId ?? `tool-call-${toolCalls.length}`;
+
         messages.push({
           role: "assistant",
           content: "",
           toolName: response.toolName,
+          toolCallId,
+          toolInput: response.input,
         });
         messages.push({
           role: "tool",
           toolName: response.toolName,
+          toolCallId,
           content: serializeToolOutput(output),
         });
 

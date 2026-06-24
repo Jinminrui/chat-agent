@@ -2,17 +2,28 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const push = vi.fn();
+const replace = vi.fn();
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push, replace }),
   useParams: () => ({ conversationId: "test-conv-1" }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => "/chat/test-conv-1",
 }));
 
+vi.mock("@/lib/api/auth", () => ({
+  getMe: vi.fn().mockResolvedValue({
+    id: "user-1",
+    email: "demo@example.com",
+    createdAt: "2026-06-24T00:00:00.000Z",
+  }),
+}));
+
 vi.mock("@/lib/api/conversations", () => ({
   listMessages: vi.fn(),
-  listConversations: vi.fn().mockResolvedValue({ items: [] }),
-  createConversation: vi.fn().mockResolvedValue({ id: "new-conv", title: "新会话", createdAt: "", updatedAt: "" }),
+  listConversations: vi.fn().mockResolvedValue([]),
+  createConversation: vi.fn().mockResolvedValue({ id: "new-conv", userId: "user-1", title: "新会话", createdAt: "", updatedAt: "" }),
 }));
 
 vi.mock("@/lib/api/chat", () => ({
@@ -32,12 +43,10 @@ describe("ConversationPage chat flow", () => {
   });
 
   it("loads existing messages on mount", async () => {
-    mockListMessages.mockResolvedValue({
-      items: [
-        { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "你好", createdAt: "2026-06-23T10:00:00Z" },
-        { id: "msg-2", conversationId: "test-conv-1", role: "assistant", content: "你好！有什么可以帮你的？", createdAt: "2026-06-23T10:00:01Z" },
-      ],
-    });
+    mockListMessages.mockResolvedValue([
+      { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "你好", createdAt: "2026-06-23T10:00:00Z" },
+      { id: "msg-2", conversationId: "test-conv-1", role: "assistant", content: "你好！有什么可以帮你的？", createdAt: "2026-06-23T10:00:01Z" },
+    ]);
 
     render(<ConversationPage />);
 
@@ -50,10 +59,10 @@ describe("ConversationPage chat flow", () => {
   });
 
   it("sends a message and displays the streamed response", async () => {
-    mockListMessages.mockResolvedValue({ items: [] });
+    mockListMessages.mockResolvedValue([]);
     mockStreamChat.mockImplementation(async (_input, handlers) => {
-      handlers.onEvent({ type: "assistant.delta", delta: "收到" });
-      handlers.onEvent({ type: "assistant.delta", delta: "你的消息" });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "收到" } });
+      handlers.onEvent({ event: "delta", id: 2, data: { content: "你的消息" } });
       handlers.onComplete?.();
     });
 
@@ -83,13 +92,11 @@ describe("ConversationPage chat flow", () => {
   });
 
   it("displays existing messages and new messages together", async () => {
-    mockListMessages.mockResolvedValue({
-      items: [
-        { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "第一条", createdAt: "2026-06-23T10:00:00Z" },
-      ],
-    });
+    mockListMessages.mockResolvedValue([
+      { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "第一条", createdAt: "2026-06-23T10:00:00Z" },
+    ]);
     mockStreamChat.mockImplementation(async (_input, handlers) => {
-      handlers.onEvent({ type: "assistant.delta", delta: "回复" });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "回复" } });
       handlers.onComplete?.();
     });
 

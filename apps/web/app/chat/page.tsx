@@ -1,14 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/chat/sidebar";
 import { Composer } from "@/components/chat/composer";
 import { EmptyState } from "@/components/chat/empty-state";
+import { getMe } from "@/lib/api/auth";
 import { createConversation } from "@/lib/api/conversations";
 
 export default function ChatPage() {
   const router = useRouter();
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getMe()
+      .then(() => {
+        if (active) {
+          setAuthReady(true);
+        }
+      })
+      .catch(() => {
+        router.replace("/login");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  if (!authReady) {
+    return null;
+  }
 
   async function handleMessage(message: string) {
     const conversation = await createConversation();
