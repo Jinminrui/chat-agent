@@ -1,22 +1,4 @@
-## Purpose
-
-定义会话列表、标题展示以及历史消息和流式消息融合展示的基本可用性。
-
-## Requirements
-
-### Requirement: 新建会话后必须能在列表中区分不同会话
-系统 MUST 为会话列表提供可区分的标题展示，避免多个会话长期表现为相同的默认标题。
-
-#### Scenario: 用户创建多个会话
-- **WHEN** 用户连续创建并使用多个会话
-- **THEN** 会话列表能够以稳定且可区分的标题展示它们
-
-### Requirement: 会话列表必须在登录后稳定加载并可进入目标会话
-系统 MUST 在用户进入聊天主界面后加载其会话列表，并支持从列表进入对应会话。
-
-#### Scenario: 已登录用户打开聊天主界面
-- **WHEN** 用户进入聊天页且存在历史会话
-- **THEN** 前端加载会话列表并允许用户进入任一属于自己的会话
+## ADDED Requirements
 
 ### Requirement: Assistant 消息必须按受限 Markdown 渲染
 系统 MUST 将 assistant 消息内容按受限 Markdown 规则渲染，至少正确展示段落、标题、列表、链接、行内代码和代码块，同时不得启用原始 HTML 直通渲染。
@@ -28,6 +10,8 @@
 #### Scenario: 展示包含原始 HTML 的 assistant 消息
 - **WHEN** assistant 消息内容包含原始 HTML 标签
 - **THEN** 页面不得将这些 HTML 作为可执行或可渲染的原始 HTML 直接输出
+
+## MODIFIED Requirements
 
 ### Requirement: 会话消息历史与流式新消息必须以一致形式展示
 系统 MUST 将历史消息与当前流式回复整合为一致的聊天展示体验，不得要求用户理解两套不同的数据形态；其中 assistant 消息在历史展示与流式展示阶段都 MUST 使用同一套 Markdown 渲染规则，user 消息则 MUST 保持纯文本展示。

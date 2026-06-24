@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -45,14 +46,16 @@ describe("ConversationPage chat flow", () => {
   it("loads existing messages on mount", async () => {
     mockListMessages.mockResolvedValue([
       { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "你好", createdAt: "2026-06-23T10:00:00Z" },
-      { id: "msg-2", conversationId: "test-conv-1", role: "assistant", content: "你好！有什么可以帮你的？", createdAt: "2026-06-23T10:00:01Z" },
+      { id: "msg-2", conversationId: "test-conv-1", role: "assistant", content: "# 回复标题\n\n- 第一项", createdAt: "2026-06-23T10:00:01Z" },
     ]);
 
     render(<ConversationPage />);
 
     await waitFor(() => {
       expect(screen.getByText("你好")).toBeInTheDocument();
-      expect(screen.getByText("你好！有什么可以帮你的？")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1, name: "回复标题" })).toBeInTheDocument();
+      const lists = screen.getAllByRole("list");
+      expect(within(lists[lists.length - 1]!).getByText("第一项")).toBeInTheDocument();
     });
 
     expect(mockListMessages).toHaveBeenCalledWith("test-conv-1");
@@ -61,8 +64,8 @@ describe("ConversationPage chat flow", () => {
   it("sends a message and displays the streamed response", async () => {
     mockListMessages.mockResolvedValue([]);
     mockStreamChat.mockImplementation(async (_input, handlers) => {
-      handlers.onEvent({ event: "delta", id: 1, data: { content: "收到" } });
-      handlers.onEvent({ event: "delta", id: 2, data: { content: "你的消息" } });
+      handlers.onEvent({ event: "delta", id: 1, data: { content: "## 流式标题\n\n" } });
+      handlers.onEvent({ event: "delta", id: 2, data: { content: "- 收到你的消息" } });
       handlers.onComplete?.();
     });
 
@@ -79,6 +82,7 @@ describe("ConversationPage chat flow", () => {
 
     await waitFor(() => {
       expect(screen.getByText("测试消息")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: "流式标题" })).toBeInTheDocument();
       expect(screen.getByText("收到你的消息")).toBeInTheDocument();
     });
 

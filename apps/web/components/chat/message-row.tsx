@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@chat-agent/shared";
+import { AssistantMarkdown } from "./assistant-markdown";
 
 interface MessageRowProps {
   message: Message;
@@ -58,7 +59,11 @@ export function MessageRow({ message, toolStatus }: MessageRowProps) {
               : "bg-muted/50 text-foreground rounded-bl-md",
           )}
         >
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          {isUser ? (
+            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          ) : (
+            <AssistantMarkdown content={message.content} />
+          )}
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/chat/sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { Composer } from "@/components/chat/composer";
+import { AssistantMarkdown } from "@/components/chat/assistant-markdown";
 import { useChatStream } from "@/features/chat/use-chat-stream";
 
 function createLocalMessageId() {
@@ -138,9 +139,10 @@ export default function ConversationPage() {
             <MessageList messages={messages} />
             {streaming && delta && (
               <div className="border-t border-border/30 bg-muted/20 px-4 py-3">
-                <p className="whitespace-pre-wrap text-sm text-foreground/70">
-                  {delta}
-                </p>
+                <AssistantMarkdown
+                  content={delta}
+                  className="text-foreground/70"
+                />
               </div>
             )}
           </main>
