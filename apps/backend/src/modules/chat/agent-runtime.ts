@@ -30,6 +30,7 @@ type RuntimeProvider = {
   stream(input: {
     messages: RuntimeMessage[];
     tools: ProviderToolDefinition[];
+    onDelta?: (content: string) => void;
   }): Promise<ProviderResponse>;
 };
 
@@ -54,6 +55,7 @@ type CreateAgentRuntimeInput = {
   tools: ToolMap;
   maxToolCalls: number;
   checkpointService?: CheckpointService;
+  onDelta?: (content: string) => void;
   onToolCall?: (event: ToolCallEvent) => void;
   onToolResult?: (event: ToolResultEvent) => void;
 };
@@ -142,6 +144,7 @@ export function createAgentRuntime(config: CreateAgentRuntimeInput) {
         const response = await config.provider.stream({
           messages,
           tools: toolDefinitions,
+          onDelta: config.onDelta,
         });
 
         if (response.type === "final") {

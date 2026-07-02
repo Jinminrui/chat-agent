@@ -95,6 +95,36 @@ describe("ConversationPage chat flow", () => {
     );
   });
 
+  it("renders the streaming response as an assistant message before completion", async () => {
+    mockListMessages.mockResolvedValue([]);
+    mockStreamChat.mockImplementation(
+      async (_input, handlers) =>
+        new Promise<void>(() => {
+          handlers.onEvent({
+            event: "delta",
+            id: 1,
+            data: { content: "正在生成" },
+          });
+        }),
+    );
+
+    render(<ConversationPage />);
+    const user = userEvent.setup();
+
+    await waitFor(() => {
+      expect(mockListMessages).toHaveBeenCalled();
+    });
+
+    const textarea = screen.getByPlaceholderText("输入消息...");
+    await user.type(textarea, "测试消息");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("AI")).toBeInTheDocument();
+      expect(screen.getByText("正在生成")).toBeInTheDocument();
+    });
+  });
+
   it("displays existing messages and new messages together", async () => {
     mockListMessages.mockResolvedValue([
       { id: "msg-1", conversationId: "test-conv-1", role: "user", content: "第一条", createdAt: "2026-06-23T10:00:00Z" },

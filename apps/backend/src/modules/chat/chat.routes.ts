@@ -145,6 +145,9 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         tools,
         maxToolCalls: MAX_TOOL_CALLS,
         checkpointService,
+        onDelta(content) {
+          sse.delta(content);
+        },
         onToolCall({ toolName, input }) {
           sse.toolStart(toolName, input);
         },
@@ -199,7 +202,6 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         await checkpointService.cleanup(conversationId, 5);
 
         // 使用 SSEWriter 发送事件
-        sse.delta(result.content);
         sse.done(assistantMessage.id);
 
         reply.raw.end();

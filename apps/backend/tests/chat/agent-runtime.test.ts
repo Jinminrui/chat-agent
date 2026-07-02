@@ -3,6 +3,33 @@ import { createAgentRuntime } from "../../src/modules/chat/agent-runtime";
 import { createToolRegistry } from "../../src/modules/tools/tool-registry";
 
 describe("agent runtime", () => {
+  it("forwards provider deltas to the runtime delta callback", async () => {
+    const provider = {
+      stream: vi.fn().mockImplementation(async ({ onDelta }) => {
+        onDelta?.("你");
+        onDelta?.("好");
+
+        return { type: "final", content: "你好" };
+      }),
+    };
+    const onDelta = vi.fn();
+
+    const runtime = createAgentRuntime({
+      provider,
+      tools: {},
+      maxToolCalls: 3,
+      onDelta,
+    });
+
+    const result = await runtime.run({
+      messages: [{ role: "user", content: "打个招呼" }],
+    });
+
+    expect(onDelta).toHaveBeenNthCalledWith(1, "你");
+    expect(onDelta).toHaveBeenNthCalledWith(2, "好");
+    expect(result.content).toBe("你好");
+  });
+
   it("runs a requested tool and returns the final assistant message", async () => {
     const provider = {
       stream: vi

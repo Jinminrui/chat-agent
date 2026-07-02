@@ -23,5 +23,6 @@ export type ChatProvider = {
   stream(input: {
     messages: ProviderMessage[];
     tools?: ProviderToolDefinition[];
+    onDelta?: (content: string) => void;
   }): Promise<ProviderResult>;
 };

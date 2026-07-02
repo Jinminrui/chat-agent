@@ -80,6 +80,12 @@ function toOpenAIMessages(messages: ProviderMessage[]) {
   });
 }
 
+type PendingToolCall = {
+  id?: string;
+  name?: string;
+  argumentsText: string;
+};
+
 export function createOpenAIProvider(
   options: CreateOpenAIProviderOptions = {},
 ): ChatProvider {
@@ -118,16 +124,22 @@ export function createOpenAIProvider(
             typeof output.iso === "string"
               ? output.iso
               : null;
+          const content = iso ? `当前时间是 ${iso}` : lastMessage.content;
+
+          input.onDelta?.(content);
 
           return {
             type: "final",
-            content: iso ? `当前时间是 ${iso}` : lastMessage.content,
+            content,
           };
         }
 
+        const content = lastMessage?.content ?? "";
+        input.onDelta?.(content);
+
         return {
           type: "final",
-          content: lastMessage?.content ?? "",
+          content,
         };
       },
     };
@@ -149,22 +161,43 @@ export function createOpenAIProvider(
           model,
           messages,
           ...(tools.length > 0 ? { tools, tool_choice: "auto" as const } : {}),
-          stream: false,
+          stream: true,
         });
 
-        const message = response.choices[0]?.message;
-        const toolCall = message?.tool_calls?.[0];
+        let content = "";
+        const toolCalls = new Map<number, PendingToolCall>();
 
-        if (toolCall?.type === "function") {
+        for await (const chunk of response) {
+          const delta = chunk.choices[0]?.delta;
+          const contentChunk = delta?.content;
+
+          if (contentChunk) {
+            content += contentChunk;
+            input.onDelta?.(contentChunk);
+          }
+
+          for (const toolCallChunk of delta?.tool_calls ?? []) {
+            const index = toolCallChunk.index;
+            const pending = toolCalls.get(index) ?? { argumentsText: "" };
+
+            pending.id = toolCallChunk.id ?? pending.id;
+            pending.name = toolCallChunk.function?.name ?? pending.name;
+            pending.argumentsText += toolCallChunk.function?.arguments ?? "";
+
+            toolCalls.set(index, pending);
+          }
+        }
+
+        const toolCall = toolCalls.get(0);
+
+        if (toolCall?.name) {
           return {
             type: "tool-call",
-            toolName: toolCall.function.name,
-            input: parseToolInput(toolCall.function.arguments),
+            toolName: toolCall.name,
+            input: parseToolInput(toolCall.argumentsText),
             toolCallId: toolCall.id,
           };
         }
-
-        const content = message?.content || "";
 
         // 记录 LLM 调用日志
         if (logger) {
@@ -173,7 +206,6 @@ export function createOpenAIProvider(
             model,
             messageCount: input.messages.length,
             duration: Date.now() - start,
-            tokens: response.usage,
           }, 'llm request completed');
         }
 

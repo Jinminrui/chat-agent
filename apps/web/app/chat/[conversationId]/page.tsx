@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useSearchParams, usePathname, useRouter } from "next/navigation";
 import type { Message } from "@chat-agent/shared";
 import { getMe } from "@/lib/api/auth";
@@ -9,7 +9,6 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/chat/sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { Composer } from "@/components/chat/composer";
-import { AssistantMarkdown } from "@/components/chat/assistant-markdown";
 import { useChatStream } from "@/features/chat/use-chat-stream";
 
 function createLocalMessageId() {
@@ -111,6 +110,23 @@ export default function ConversationPage() {
     [conversationId, send],
   );
 
+  const visibleMessages = useMemo(() => {
+    if (!streaming || !delta) {
+      return messages;
+    }
+
+    return [
+      ...messages,
+      {
+        id: `streaming-assistant-${conversationId}`,
+        conversationId,
+        role: "assistant" as const,
+        content: delta,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+  }, [conversationId, delta, messages, streaming]);
+
   useEffect(() => {
     if (!authReady || !messagesLoaded) return;
 
@@ -136,15 +152,7 @@ export default function ConversationPage() {
             <h1 className="text-sm font-medium text-foreground/80">会话</h1>
           </header>
           <main className="flex-1 overflow-hidden">
-            <MessageList messages={messages} />
-            {streaming && delta && (
-              <div className="border-t border-border/30 bg-muted/20 px-4 py-3">
-                <AssistantMarkdown
-                  content={delta}
-                  className="text-foreground/70"
-                />
-              </div>
-            )}
+            <MessageList messages={visibleMessages} />
           </main>
           <Composer onSubmit={handleSend} disabled={streaming} />
         </div>

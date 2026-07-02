@@ -337,7 +337,12 @@ describe("chat stream route", () => {
   it("streams assistant deltas over SSE", async () => {
     const app = buildApp({
       provider: {
-        stream: async () => ({ type: "final", content: "你好，世界" }),
+        stream: async ({ onDelta }) => {
+          onDelta?.("你好");
+          onDelta?.("，世界");
+
+          return { type: "final", content: "你好，世界" };
+        },
       },
     });
 
@@ -378,14 +383,24 @@ describe("chat stream route", () => {
       expect(events[0]).toEqual({
         event: "delta",
         id: 1,
-        data: { content: "你好，世界" },
+        data: { content: "你好" },
       });
-      expect(events[1]).toMatchObject({
-        event: "done",
+      expect(events[1]).toEqual({
+        event: "delta",
         id: 2,
+        data: { content: "，世界" },
       });
-      expect(events[1]?.data.messageId).toEqual(expect.any(String));
-      expect(events[1]?.data.messageId).not.toBe("");
+      expect(events[2]).toMatchObject({
+        event: "done",
+        id: 3,
+      });
+      expect(events[2]?.data.messageId).toEqual(expect.any(String));
+      expect(events[2]?.data.messageId).not.toBe("");
+
+      const assistantMsgs = Array.from(messages.values()).filter(
+        (m) => m.conversationId === conversationId && m.role === "assistant",
+      );
+      expect(assistantMsgs[0]?.content).toBe("你好，世界");
     } finally {
       await app.close();
     }
