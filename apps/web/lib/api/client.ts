@@ -17,6 +17,13 @@ async function request<T>(
     },
   });
 
+  if (response.status === 401) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError(401, '未登录');
+  }
+
   if (response.status === 204) {
     return { code: 0, msg: 'ok', data: undefined as T };
   }

@@ -88,6 +88,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     "/me",
     {
+      preHandler: [app.requireAuth],
       schema: {
         response: {
           200: successResponseSchema,
@@ -96,11 +97,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const userId = request.session.userId;
-
-      if (!userId) {
-        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
-      }
+      const userId = request.userId;
 
       const user = await getCurrentUser(userId);
 

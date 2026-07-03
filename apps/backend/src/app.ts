@@ -11,6 +11,8 @@ import { currentTimeTool } from "./modules/tools/builtins/current-time.tool";
 import { fetchUrlTool } from "./modules/tools/builtins/fetch-url.tool";
 import { webSearchTool } from "./modules/tools/builtins/web-search.tool";
 import authSessionPlugin from "./plugins/auth-session";
+import authGuardPlugin from "./plugins/auth-guard";
+import csrfPlugin from "./plugins/csrf";
 import responseFormatPlugin from "./plugins/response-format";
 
 type BuildAppOptions = {
@@ -49,6 +51,8 @@ export function buildApp(options: BuildAppOptions = {}) {
     credentials: true,
   });
   app.register(authSessionPlugin);
+  app.register(authGuardPlugin);
+  app.register(csrfPlugin);
   app.register(responseFormatPlugin);
   app.register(authRoutes, { prefix: "/api/auth" });
   app.register(chatRoutes, { prefix: "/api/chat", provider, prisma, tools });

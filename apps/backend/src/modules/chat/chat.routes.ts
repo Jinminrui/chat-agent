@@ -69,6 +69,7 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
   app.post(
     "/stream",
     {
+      preHandler: [app.requireAuth],
       schema: {
         body: {
           type: "object",
@@ -82,11 +83,7 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
       },
     },
     async (request, reply) => {
-      const userId = request.session.userId;
-
-      if (!userId) {
-        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
-      }
+      const userId = request.userId;
 
       const { conversationId, message } = request.body as {
         conversationId: string;

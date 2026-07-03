@@ -6,5 +6,8 @@ export default defineConfig({
       "apps/backend/tests/**/*.test.{ts,tsx}",
       "packages/shared/tests/**/*.test.{ts,tsx}",
     ],
+    env: {
+      NODE_ENV: "test",
+    },
   },
 });

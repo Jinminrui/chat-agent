@@ -39,6 +39,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
   app.post(
     "/",
     {
+      preHandler: [app.requireAuth],
       schema: {
         body: {
           type: "object",
@@ -51,11 +52,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const userId = request.session.userId;
-
-      if (!userId) {
-        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
-      }
+      const userId = request.userId;
 
       const conversation = await createConversation(userId);
       return reply.code(201).success({ conversation });
@@ -65,6 +62,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     "/",
     {
+      preHandler: [app.requireAuth],
       schema: {
         response: {
           200: successResponseSchema,
@@ -73,11 +71,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const userId = request.session.userId;
-
-      if (!userId) {
-        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
-      }
+      const userId = request.userId;
 
       const items = await listConversations(userId);
       return reply.success({ items });
@@ -87,6 +81,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     "/:id/messages",
     {
+      preHandler: [app.requireAuth],
       schema: {
         params: {
           type: "object",
@@ -106,11 +101,7 @@ const conversationRoutes: FastifyPluginAsync = async (app) => {
       request: FastifyRequest<{ Params: ConversationMessageParams }>,
       reply,
     ) => {
-      const userId = request.session.userId;
-
-      if (!userId) {
-        return reply.code(401).error(ErrorCodes.AUTH_NOT_LOGGED_IN, "未登录");
-      }
+      const userId = request.userId;
 
       const items = await listMessages(userId, request.params.id);
 
