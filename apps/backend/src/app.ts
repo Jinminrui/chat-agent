@@ -31,6 +31,7 @@ export function buildApp(options: BuildAppOptions = {}) {
     logger: {
       level: process.env.LOG_LEVEL || 'info',
     },
+    disableRequestLogging: true,
     genReqId: (req) => {
       // 优先使用客户端传入的 requestId，否则自动生成
       const clientRequestId = req.headers['x-request-id'];

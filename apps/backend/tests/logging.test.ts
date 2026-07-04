@@ -68,6 +68,14 @@ describe('error logging', () => {
 });
 
 describe('logging', () => {
+  it('should disable automatic request logging by default', async () => {
+    const app = buildApp();
+
+    expect(app.initialConfig.disableRequestLogging).toBe(true);
+
+    await app.close();
+  });
+
   it('should generate requestId for each request', async () => {
     const app = buildApp();
 
