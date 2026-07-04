@@ -7,12 +7,12 @@ describe("design tokens", () => {
 
     // 背景色映射到 --background (oklch 格式)
     expect(css).toContain("--background:");
-    expect(css).toContain("#f6f3ee");
+    expect(css).toContain("#1a1a1a");
     // 侧边栏背景色映射到 --sidebar (oklch 格式)
     expect(css).toContain("--sidebar:");
-    expect(css).toContain("#efe9e1");
+    expect(css).toContain("#1c1c1c");
     // 主色调映射到 --primary (oklch 格式)
     expect(css).toContain("--primary:");
-    expect(css).toContain("#355d52");
+    expect(css).toContain("#f2f2f2");
   });
 });
