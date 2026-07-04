@@ -8,6 +8,13 @@ export type ProviderMessage = {
 
 export type ProviderToolDefinition = {
   name: string;
+  description: string;
+  parameters: {
+    type: "object";
+    properties?: Record<string, unknown>;
+    required?: string[];
+    additionalProperties?: boolean;
+  };
 };
 
 export type ProviderResult =

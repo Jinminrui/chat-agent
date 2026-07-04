@@ -1,6 +1,24 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createAgentRuntime } from "../../src/modules/chat/agent-runtime";
 import { createToolRegistry } from "../../src/modules/tools/tool-registry";
+import type { Tool } from "../../src/modules/tools/tool-registry";
+
+function createCurrentTimeTool(
+  output: Record<string, unknown> = { iso: "2026-06-23T10:00:00.000Z" },
+): Tool {
+  return {
+    definition: {
+      name: "current-time",
+      description: "Return the current server time.",
+      parameters: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+    },
+    handler: async () => output,
+  };
+}
 
 describe("agent runtime", () => {
   it("forwards provider deltas to the runtime delta callback", async () => {
@@ -48,7 +66,7 @@ describe("agent runtime", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 3,
     });
@@ -85,7 +103,7 @@ describe("agent runtime", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 1,
     });
@@ -103,12 +121,66 @@ describe("agent runtime", () => {
 
   it("only treats own properties as registered tools", () => {
     const registry = createToolRegistry({
-      "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+      "current-time": createCurrentTimeTool(),
     });
 
     expect(registry.has("current-time")).toBe(true);
     expect(registry.has("toString")).toBe(false);
     expect(registry.has("constructor")).toBe(false);
+  });
+
+  it("passes full tool definitions to the provider", async () => {
+    const provider = {
+      stream: vi.fn().mockResolvedValue({
+        type: "final",
+        content: "done",
+      }),
+    };
+
+    const runtime = createAgentRuntime({
+      provider,
+      tools: {
+        "web-search": {
+          definition: {
+            name: "web-search",
+            description: "Search the web for current information.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: { type: "string" },
+              },
+              required: ["query"],
+              additionalProperties: false,
+            },
+          },
+          handler: async () => ({ results: [] }),
+        },
+      },
+      maxToolCalls: 3,
+    });
+
+    await runtime.run({
+      messages: [{ role: "user", content: "搜索 SerpAPI" }],
+    });
+
+    expect(provider.stream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: [
+          {
+            name: "web-search",
+            description: "Search the web for current information.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: { type: "string" },
+              },
+              required: ["query"],
+              additionalProperties: false,
+            },
+          },
+        ],
+      }),
+    );
   });
 });
 
@@ -144,7 +216,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -189,7 +261,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -220,7 +292,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 5,
     });
@@ -263,7 +335,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 5,
       checkpointService,
@@ -305,7 +377,7 @@ describe("agent runtime with checkpoints", () => {
     const runtime = createAgentRuntime({
       provider,
       tools: {
-        "current-time": async () => ({ iso: "2026-06-23T10:00:00.000Z" }),
+        "current-time": createCurrentTimeTool(),
       },
       maxToolCalls: 5,
       checkpointService,

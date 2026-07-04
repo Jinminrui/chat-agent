@@ -174,7 +174,18 @@ describe("chat persistence", () => {
         },
       },
       tools: {
-        "current-time": async () => ({ time: "2025-01-01T00:00:00Z" }),
+        "current-time": {
+          definition: {
+            name: "current-time",
+            description: "Return the current server time.",
+            parameters: {
+              type: "object",
+              properties: {},
+              additionalProperties: false,
+            },
+          },
+          handler: async () => ({ time: "2025-01-01T00:00:00Z" }),
+        },
       },
     });
 

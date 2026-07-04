@@ -101,7 +101,7 @@ function serializeToolOutput(output: ToolOutput) {
 
 export function createAgentRuntime(config: CreateAgentRuntimeInput) {
   const registry = createToolRegistry(config.tools);
-  const toolDefinitions = registry.names().map((name) => ({ name }));
+  const toolDefinitions = registry.definitions();
 
   return {
     async run(input: RunInput): Promise<RunResult> {

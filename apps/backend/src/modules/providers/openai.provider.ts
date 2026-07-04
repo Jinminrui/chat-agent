@@ -36,12 +36,8 @@ function toOpenAITools(tools: ProviderToolDefinition[] = []) {
     type: "function" as const,
     function: {
       name: tool.name,
-      description: `Server tool: ${tool.name}`,
-      parameters: {
-        type: "object",
-        properties: {},
-        additionalProperties: true,
-      },
+      description: tool.description,
+      parameters: tool.parameters,
     },
   }));
 }
