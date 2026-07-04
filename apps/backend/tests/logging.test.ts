@@ -1,10 +1,22 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { buildApp } from '../src/app';
 
 describe('prisma logging', () => {
   it('should export setupPrismaLogging function', async () => {
     const { setupPrismaLogging } = await import('../src/lib/prisma');
     expect(typeof setupPrismaLogging).toBe('function');
+  });
+
+  it('should skip Prisma query logging unless explicitly enabled', async () => {
+    const { prisma, setupPrismaLogging } = await import('../src/lib/prisma');
+    const logger = {
+      info: vi.fn(),
+    };
+    const on = vi.spyOn(prisma, '$on');
+
+    setupPrismaLogging(logger as never);
+
+    expect(on).not.toHaveBeenCalledWith('query', expect.any(Function));
   });
 });
 
