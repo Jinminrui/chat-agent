@@ -98,6 +98,7 @@ pnpm test:web
 | `LLM_BASE_URL` | `https://api.openai.com/v1` | OpenAI 兼容接口地址 |
 | `LLM_API_KEY` | - | 模型调用密钥；未设置时走 mock provider |
 | `LLM_MODEL` | `gpt-3.5-turbo` | 默认模型名 |
+| `SERPAPI_API_KEY` | - | SerpAPI 搜索密钥；配置后启用 `web-search` 真实网页搜索 |
 | `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:3001` | 前端请求后端的基础地址 |
 
 ### 开发环境
