@@ -34,7 +34,6 @@ export async function streamChat(
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
-    console.log('Received chunk:', buffer);
     const lines = buffer.split('\n');
     buffer = lines.pop() || '';
 

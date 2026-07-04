@@ -81,6 +81,44 @@ describe("streamChat", () => {
     expect(onEvent).toHaveBeenCalledWith({ event: "delta", id: 123, data: { content: "test" } });
   });
 
+  it("does not log raw SSE chunks during a successful stream", async () => {
+    const sseBody = [
+      "event: delta",
+      "id: 1",
+      'data: {"content":"Hello"}',
+      "",
+      "event: done",
+      "id: 2",
+      'data: {"messageId":"msg-1"}',
+      "",
+    ].join("\n");
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(sseBody));
+        controller.close();
+      },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        body: stream,
+      }),
+    );
+
+    const consoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await streamChat(
+      { conversationId: "conv-1", message: "Hi" },
+      { onEvent: vi.fn() },
+    );
+
+    expect(consoleLog).not.toHaveBeenCalled();
+  });
+
   it("throws on non-ok HTTP response", async () => {
     vi.stubGlobal(
       "fetch",
