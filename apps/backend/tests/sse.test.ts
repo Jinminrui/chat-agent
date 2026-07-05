@@ -11,7 +11,12 @@ describe('SSEWriter', () => {
       writeHead: vi.fn(),
       write: vi.fn(),
     };
-    mockReply = { raw: mockRaw };
+    mockReply = {
+      raw: mockRaw,
+      request: {
+        headers: {},
+      },
+    };
   });
 
   afterEach(() => {
@@ -24,6 +29,8 @@ describe('SSEWriter', () => {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': 'true',
     });
   });
 

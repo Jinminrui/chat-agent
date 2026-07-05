@@ -168,6 +168,7 @@ const chatRoutes: FastifyPluginAsync<ChatRoutesOptions> = async (
         request.log.info({
           conversationId,
           toolCallCount: result.toolCalls.length,
+          toolNames: result.toolCalls.map((toolCall) => toolCall.toolName),
           contentLength: result.content.length,
         }, 'agent run completed');
 

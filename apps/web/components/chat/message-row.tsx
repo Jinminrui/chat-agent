@@ -1,21 +1,19 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@chat-agent/shared";
 import { AssistantMarkdown } from "./assistant-markdown";
+import type { ProcessStatus } from "@/features/chat/use-chat-stream";
 
 interface MessageRowProps {
   message: Message;
-  toolStatus?: {
-    toolName: string;
-    status: "running" | "success" | "error";
-    label: string;
-  };
+  processStatus?: ProcessStatus;
 }
 
-export function MessageRow({ message, toolStatus }: MessageRowProps) {
+export function MessageRow({ message, processStatus }: MessageRowProps) {
   const isUser = message.role === "user";
+  const shouldRenderContent = isUser || message.content.trim().length > 0;
 
   return (
     <div
@@ -42,29 +40,35 @@ export function MessageRow({ message, toolStatus }: MessageRowProps) {
           isUser ? "items-end" : "items-start",
         )}
       >
-        {toolStatus && toolStatus.status === "running" && (
+        {processStatus && (
           <Badge
             variant="secondary"
             className="gap-1.5 bg-muted/50 text-xs font-normal"
           >
-            <Loader2 className="h-3 w-3 animate-spin" />
-            {toolStatus.label}
+            {processStatus.status === "success" ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            )}
+            {processStatus.label}
           </Badge>
         )}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-            isUser
-              ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-muted/50 text-foreground rounded-bl-md",
-          )}
-        >
-          {isUser ? (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
-          ) : (
-            <AssistantMarkdown content={message.content} />
-          )}
-        </div>
+        {shouldRenderContent && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+              isUser
+                ? "bg-primary text-primary-foreground rounded-br-md"
+                : "bg-muted/50 text-foreground rounded-bl-md",
+            )}
+          >
+            {isUser ? (
+              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            ) : (
+              <AssistantMarkdown content={message.content} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

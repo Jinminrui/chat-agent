@@ -570,6 +570,69 @@ describe("chat stream route", () => {
     }
   });
 
+  it("logs tool names in the agent completion summary", async () => {
+    const chatInfoLog = vi.fn();
+    const provider = {
+      stream: vi
+        .fn()
+        .mockResolvedValueOnce({
+          type: "tool-call",
+          toolName: "current-time",
+          input: {},
+        })
+        .mockResolvedValueOnce({
+          type: "final",
+          content: "现在是 10:00。",
+        }),
+    };
+    const app = buildApp({ provider });
+
+    app.addHook("preHandler", async (request) => {
+      if (request.url === "/api/chat/stream") {
+        request.log.info = chatInfoLog as typeof request.log.info;
+      }
+    });
+
+    try {
+      const register = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: { username: "tool-log", email: "tool-log@example.com", password: "password123" },
+      });
+      const session = register.cookies[0]?.value ?? "";
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/conversations",
+        cookies: { session },
+        payload: {},
+      });
+      const conversationId = created.json().data.conversation.id;
+
+      await app.inject({
+        method: "POST",
+        url: "/api/chat/stream",
+        cookies: { session },
+        payload: {
+          conversationId,
+          message: "现在几点？",
+        },
+      });
+
+      expect(chatInfoLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conversationId,
+          toolCallCount: 1,
+          toolNames: ["current-time"],
+          contentLength: "现在是 10:00。".length,
+        }),
+        "agent run completed",
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
   it("loads existing conversation history before running the agent", async () => {
     const provider = {
       stream: vi.fn().mockResolvedValue({ type: "final", content: "新的回复" }),

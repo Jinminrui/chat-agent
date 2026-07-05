@@ -104,4 +104,26 @@ describe("MessageList scrolling", () => {
       behavior: "smooth",
     });
   });
+
+  it("renders process status only for the streaming assistant message", () => {
+    render(
+      <MessageList
+        messages={[
+          message("msg-1", "历史回复"),
+          message("streaming-assistant-conv-1", "流式回复"),
+        ]}
+        streamingMessageId="streaming-assistant-conv-1"
+        processStatus={{
+          status: "running",
+          label: "正在调用 web-search...",
+          toolName: "web-search",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("正在调用 web-search...")).toBeInTheDocument();
+    expect(screen.getAllByText("正在调用 web-search...")).toHaveLength(1);
+    expect(screen.getByText("历史回复")).toBeInTheDocument();
+    expect(screen.getByText("流式回复")).toBeInTheDocument();
+  });
 });
