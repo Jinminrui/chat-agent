@@ -66,7 +66,9 @@ export default function ConversationPage() {
     [conversationId],
   );
 
-  const { streaming, delta, send } = useChatStream({ onComplete: handleStreamComplete });
+  const { streaming, delta, processStatus, send } = useChatStream({
+    onComplete: handleStreamComplete,
+  });
 
   useEffect(() => {
     if (!authReady) {
@@ -110,22 +112,31 @@ export default function ConversationPage() {
     [conversationId, send],
   );
 
+  const streamingMessageId = `streaming-assistant-${conversationId}`;
+
   const visibleMessages = useMemo(() => {
-    if (!streaming || !delta) {
+    if (!streaming || (!delta && !processStatus)) {
       return messages;
     }
 
     return [
       ...messages,
       {
-        id: `streaming-assistant-${conversationId}`,
+        id: streamingMessageId,
         conversationId,
         role: "assistant" as const,
         content: delta,
         createdAt: new Date().toISOString(),
       },
     ];
-  }, [conversationId, delta, messages, streaming]);
+  }, [
+    conversationId,
+    delta,
+    messages,
+    processStatus,
+    streaming,
+    streamingMessageId,
+  ]);
 
   useEffect(() => {
     if (!authReady || !messagesLoaded) return;
@@ -152,7 +163,11 @@ export default function ConversationPage() {
             <h1 className="text-sm font-medium text-foreground/80">会话</h1>
           </header>
           <main className="flex-1 overflow-hidden">
-            <MessageList messages={visibleMessages} />
+            <MessageList
+              messages={visibleMessages}
+              processStatus={processStatus}
+              streamingMessageId={streaming ? streamingMessageId : null}
+            />
           </main>
           <Composer onSubmit={handleSend} disabled={streaming} />
         </div>
