@@ -1,20 +1,17 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@chat-agent/shared";
 import { AssistantMarkdown } from "./assistant-markdown";
+import type { ProcessStatus } from "@/features/chat/use-chat-stream";
 
 interface MessageRowProps {
   message: Message;
-  toolStatus?: {
-    toolName: string;
-    status: "running" | "success" | "error";
-    label: string;
-  };
+  processStatus?: ProcessStatus;
 }
 
-export function MessageRow({ message, toolStatus }: MessageRowProps) {
+export function MessageRow({ message, processStatus }: MessageRowProps) {
   const isUser = message.role === "user";
 
   return (
@@ -42,13 +39,17 @@ export function MessageRow({ message, toolStatus }: MessageRowProps) {
           isUser ? "items-end" : "items-start",
         )}
       >
-        {toolStatus && toolStatus.status === "running" && (
+        {processStatus && (
           <Badge
             variant="secondary"
             className="gap-1.5 bg-muted/50 text-xs font-normal"
           >
-            <Loader2 className="h-3 w-3 animate-spin" />
-            {toolStatus.label}
+            {processStatus.status === "success" ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            )}
+            {processStatus.label}
           </Badge>
         )}
         <div

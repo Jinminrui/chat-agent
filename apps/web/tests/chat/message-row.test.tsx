@@ -61,4 +61,47 @@ describe("MessageRow", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText("# 用户标题")).toBeInTheDocument();
   });
+
+  it("renders running process status above assistant content", () => {
+    render(
+      <MessageRow
+        message={{
+          id: "msg-4",
+          conversationId: "conv-1",
+          role: "assistant",
+          content: "回复中",
+          createdAt: "2026-07-05T00:00:00.000Z",
+        }}
+        processStatus={{
+          status: "running",
+          label: "正在调用 web-search...",
+          toolName: "web-search",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("正在调用 web-search...")).toBeInTheDocument();
+    expect(screen.getByText("回复中")).toBeInTheDocument();
+  });
+
+  it("renders success process status above assistant content", () => {
+    render(
+      <MessageRow
+        message={{
+          id: "msg-5",
+          conversationId: "conv-1",
+          role: "assistant",
+          content: "准备回答",
+          createdAt: "2026-07-05T00:00:00.000Z",
+        }}
+        processStatus={{
+          status: "success",
+          label: "web-search 调用完成",
+          toolName: "web-search",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("web-search 调用完成")).toBeInTheDocument();
+  });
 });
