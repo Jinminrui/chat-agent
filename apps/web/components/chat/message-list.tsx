@@ -6,17 +6,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { MessageRow } from "./message-row";
 import type { Message } from "@chat-agent/shared";
+import type { ProcessStatus } from "@/features/chat/use-chat-stream";
 
 interface MessageListProps {
   messages: Message[];
-  toolStatus?: {
-    toolName: string;
-    status: "running" | "success" | "error";
-    label: string;
-  };
+  processStatus?: ProcessStatus | null;
+  streamingMessageId?: string | null;
 }
 
-export function MessageList({ messages, toolStatus }: MessageListProps) {
+export function MessageList({
+  messages,
+  processStatus,
+  streamingMessageId,
+}: MessageListProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isPinnedToBottom, setIsPinnedToBottom] = useState(true);
@@ -104,8 +106,12 @@ export function MessageList({ messages, toolStatus }: MessageListProps) {
             <MessageRow
               key={msg.id}
               message={msg}
-              toolStatus={
-                msg.role === "assistant" && toolStatus ? toolStatus : undefined
+              processStatus={
+                msg.role === "assistant" &&
+                processStatus &&
+                msg.id === streamingMessageId
+                  ? processStatus
+                  : undefined
               }
             />
           ))}
