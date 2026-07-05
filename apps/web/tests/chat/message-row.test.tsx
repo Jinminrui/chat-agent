@@ -104,4 +104,25 @@ describe("MessageRow", () => {
 
     expect(screen.getByText("web-search 调用完成")).toBeInTheDocument();
   });
+
+  it("does not render an empty assistant bubble while only process status is available", () => {
+    const { container } = render(
+      <MessageRow
+        message={{
+          id: "msg-6",
+          conversationId: "conv-1",
+          role: "assistant",
+          content: "",
+          createdAt: "2026-07-05T00:00:00.000Z",
+        }}
+        processStatus={{
+          status: "running",
+          label: "正在思考...",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("正在思考...")).toBeInTheDocument();
+    expect(container.querySelectorAll(".rounded-2xl")).toHaveLength(0);
+  });
 });

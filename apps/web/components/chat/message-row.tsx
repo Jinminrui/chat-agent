@@ -13,6 +13,7 @@ interface MessageRowProps {
 
 export function MessageRow({ message, processStatus }: MessageRowProps) {
   const isUser = message.role === "user";
+  const shouldRenderContent = isUser || message.content.trim().length > 0;
 
   return (
     <div
@@ -52,20 +53,22 @@ export function MessageRow({ message, processStatus }: MessageRowProps) {
             {processStatus.label}
           </Badge>
         )}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-            isUser
-              ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-muted/50 text-foreground rounded-bl-md",
-          )}
-        >
-          {isUser ? (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
-          ) : (
-            <AssistantMarkdown content={message.content} />
-          )}
-        </div>
+        {shouldRenderContent && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+              isUser
+                ? "bg-primary text-primary-foreground rounded-br-md"
+                : "bg-muted/50 text-foreground rounded-bl-md",
+            )}
+          >
+            {isUser ? (
+              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            ) : (
+              <AssistantMarkdown content={message.content} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
