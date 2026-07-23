@@ -7,14 +7,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 interface ComposerProps {
+  /** 提交消息的回调函数 */
   onSubmit: (message: string) => void;
+  /** 是否禁用输入（如正在接收流式响应时） */
   disabled?: boolean;
 }
 
+/**
+ * 消息输入框组件
+ *
+ * 功能：
+ * - 自适应高度：根据内容自动调整 textarea 高度，最大 200px
+ * - 快捷键支持：Enter 发送，Shift + Enter 换行
+ * - 空消息禁用：发送按钮在输入为空时禁用
+ * - 流式响应禁用：disabled 状态下禁止输入
+ */
 export function Composer({ onSubmit, disabled }: ComposerProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 自适应高度：每次 value 变化时重置高度，跟随内容增长
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -34,6 +46,7 @@ export function Composer({ onSubmit, disabled }: ComposerProps) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    // Enter 发送，Shift + Enter 换行
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submitMessage();

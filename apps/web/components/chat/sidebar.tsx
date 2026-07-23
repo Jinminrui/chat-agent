@@ -26,27 +26,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+/**
+ * 应用侧边栏组件
+ *
+ * 功能：
+ * - 显示应用标题和新建会话按钮
+ * - 展示历史会话列表，支持路由高亮
+ * - 底部设置菜单（个人设置、退出登录）
+ * - 会话按创建时间倒序排列（最新在前）
+ */
 export function AppSidebar() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
+  // 初始加载：获取会话列表
   useEffect(() => {
     listConversations().then((items) => setConversations(items));
   }, []);
 
+  /** 创建新会话：添加到列表头部并跳转 */
   const handleCreate = useCallback(async () => {
     const conv = await createConversation();
     setConversations((prev) => [conv, ...prev]);
     router.push(`/chat/${conv.id}`);
   }, [router]);
 
+  /** 退出登录：清除会话列表并跳转登录页 */
   const handleLogout = useCallback(async () => {
     await logout();
     setConversations([]);
     router.replace("/login");
   }, [router]);
 
+  /** 判断会话是否为当前激活状态 */
   const isActive = (convId: string) => pathname === `/chat/${convId}`;
 
   return (

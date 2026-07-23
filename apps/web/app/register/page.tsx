@@ -1,6 +1,12 @@
 import { AuthCard } from "@/components/auth/auth-card";
 import { RegisterForm } from "@/components/auth/register-form";
 
+/**
+ * 注册页面
+ *
+ * 使用 AuthCard 组件提供统一的认证页面布局，
+ * 包含注册表单和指向登录页的链接。
+ */
 export default function RegisterPage() {
   return (
     <AuthCard

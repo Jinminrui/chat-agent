@@ -8,12 +8,25 @@ import { MessageRow } from "./message-row";
 import type { Message } from "@chat-agent/shared";
 import type { ProcessStatus } from "@/features/chat/use-chat-stream";
 
+/** MessageList 组件的属性 */
 interface MessageListProps {
+  /** 消息列表 */
   messages: Message[];
+  /** 当前流式响应的处理状态（如搜索中、思考中等） */
   processStatus?: ProcessStatus | null;
+  /** 当前正在流式接收的消息 ID，用于关联 processStatus */
   streamingMessageId?: string | null;
 }
 
+/**
+ * 消息列表组件
+ *
+ * 功能：
+ * - 渲染消息列表，支持自动滚动
+ * - 当用户滚动到底部附近时自动锁定，新消息到来时自动滚动
+ * - 当用户向上滚动时显示"回到底部"按钮
+ * - 为正在流式接收的消息显示处理状态（如搜索中、思考中）
+ */
 export function MessageList({
   messages,
   processStatus,
@@ -21,9 +34,12 @@ export function MessageList({
 }: MessageListProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  /** 是否锁定在底部（用户未手动向上滚动） */
   const [isPinnedToBottom, setIsPinnedToBottom] = useState(true);
+  /** 是否显示"回到底部"跳转按钮 */
   const [showJumpButton, setShowJumpButton] = useState(false);
 
+  /** 获取 ScrollArea 的视口元素 */
   const getViewport = useCallback(
     () =>
       rootRef.current?.querySelector<HTMLElement>(
@@ -32,6 +48,7 @@ export function MessageList({
     [],
   );
 
+  /** 滚动到底部锚点 */
   const scrollToBottom = useCallback((behavior?: ScrollBehavior) => {
     if (typeof bottomRef.current?.scrollIntoView !== "function") {
       return;
@@ -42,12 +59,14 @@ export function MessageList({
     );
   }, []);
 
+  /** 判断当前滚动位置是否接近底部（阈值 80px） */
   const isNearBottom = useCallback((viewport: HTMLElement) => {
     return (
       viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= 80
     );
   }, []);
 
+  // 监听滚动事件，更新底部锁定状态
   useEffect(() => {
     const viewport = getViewport();
 
@@ -59,6 +78,7 @@ export function MessageList({
       const nearBottom = isNearBottom(viewport);
 
       setIsPinnedToBottom(nearBottom);
+      // 滚动到底部时隐藏跳转按钮
       if (nearBottom) {
         setShowJumpButton(false);
       }
@@ -71,6 +91,7 @@ export function MessageList({
     };
   }, [getViewport, isNearBottom]);
 
+  // 消息变化时：锁定底部则自动滚动，否则显示跳转按钮
   useEffect(() => {
     if (messages.length === 0) {
       return;
@@ -84,6 +105,7 @@ export function MessageList({
     setShowJumpButton(true);
   }, [isPinnedToBottom, messages, scrollToBottom]);
 
+  /** 点击跳转按钮：锁定底部并平滑滚动 */
   const handleJumpToBottom = () => {
     setIsPinnedToBottom(true);
     setShowJumpButton(false);
@@ -106,6 +128,7 @@ export function MessageList({
             <MessageRow
               key={msg.id}
               message={msg}
+              // 只有当前正在流式接收的助手消息才显示 processStatus
               processStatus={
                 msg.role === "assistant" &&
                 processStatus &&
@@ -115,6 +138,7 @@ export function MessageList({
               }
             />
           ))}
+          {/* 底部锚点，用于 scrollIntoView 定位 */}
           <div ref={bottomRef} />
         </div>
       </ScrollArea>

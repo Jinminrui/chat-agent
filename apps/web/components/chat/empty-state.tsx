@@ -2,9 +2,11 @@ import { MessageSquare, Search, Clock, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
+  /** 点击建议时的回调函数 */
   onSuggestionClick: (suggestion: string) => void;
 }
 
+/** 预设的建议提示列表 */
 const suggestions = [
   {
     icon: Search,
@@ -28,6 +30,19 @@ const suggestions = [
   },
 ];
 
+/**
+ * 空状态组件
+ *
+ * 当用户进入新会话页面时显示，包含：
+ * - 欢迎标题和描述
+ * - 预设的建议提示按钮（可点击快速开始对话）
+ *
+ * 建议提示展示了 Agent 的能力：
+ * - 网页搜索和内容总结
+ * - AI 新闻搜索
+ * - 时间查询
+ * - 邮件撰写
+ */
 export function EmptyState({ onSuggestionClick }: EmptyStateProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center p-8">
@@ -55,6 +70,7 @@ export function EmptyState({ onSuggestionClick }: EmptyStateProps) {
               "active:scale-[0.98]",
             )}
             style={{
+              // 交错动画：每个按钮延迟 50ms
               animationDelay: `${index * 50}ms`,
             }}
           >

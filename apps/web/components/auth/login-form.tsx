@@ -7,6 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/lib/api/auth";
 
+/**
+ * 登录表单组件
+ *
+ * 功能：
+ * - 支持用户名或邮箱登录
+ * - 表单验证（HTML5 原生验证）
+ * - 错误处理和 loading 状态
+ * - 登录成功后跳转到聊天页面
+ */
 export function LoginForm() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,8 +30,10 @@ export function LoginForm() {
 
     try {
       await login(usernameOrEmail, password);
+      // 登录成功：跳转到聊天页面
       router.push("/chat");
     } catch (err) {
+      // 登录失败：显示错误信息
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {
       setLoading(false);
@@ -52,6 +63,7 @@ export function LoginForm() {
           required
         />
       </div>
+      {/* 错误提示：仅在登录失败时显示 */}
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}

@@ -7,6 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { register } from "@/lib/api/auth";
 
+/**
+ * 注册表单组件
+ *
+ * 功能：
+ * - 收集用户名、邮箱、密码
+ * - 表单验证（HTML5 原生验证，邮箱格式校验）
+ * - 错误处理和 loading 状态
+ * - 注册成功后自动跳转到聊天页面
+ */
 export function RegisterForm() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -22,8 +31,10 @@ export function RegisterForm() {
 
     try {
       await register({ username, email, password });
+      // 注册成功：跳转到聊天页面
       router.push("/chat");
     } catch (err) {
+      // 注册失败：显示错误信息
       setError(err instanceof Error ? err.message : "注册失败");
     } finally {
       setLoading(false);
@@ -64,6 +75,7 @@ export function RegisterForm() {
           required
         />
       </div>
+      {/* 错误提示：仅在注册失败时显示 */}
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}
